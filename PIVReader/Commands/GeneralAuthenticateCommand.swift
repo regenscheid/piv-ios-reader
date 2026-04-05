@@ -69,6 +69,14 @@ func buildGeneralAuthenticate(
     return CommandAPDU(ins: 0x87, p1: p1, p2: p2, data: data, le: 0)
 }
 
+/// Extract the signature (tag 82) from a GENERAL AUTHENTICATE response.
+func extractGASignature(_ resp: CardResponse) -> Data? {
+    guard resp.success, !resp.data.isEmpty else { return nil }
+    let tlvs = parseTLV(resp.data)
+    guard let template = findTag(tlvs, 0x7C) else { return nil }
+    return findTag(template.children(), 0x82)?.value
+}
+
 /// Parse a GENERAL AUTHENTICATE response.
 func parseGeneralAuthenticateResponse(_ resp: ResponseAPDU) -> [String: Any] {
     var result: [String: Any] = ["sw": resp.swHex]

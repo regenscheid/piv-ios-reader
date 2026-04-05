@@ -10,6 +10,7 @@ class CardReaderViewModel: ObservableObject {
     @Published var smCipherSuites: [String] = []
     @Published var certificates: [(name: String, summary: CertificateSummary)] = []
     @Published var chuid: PIVChuid? = nil
+    @Published var challengeResult: ChallengeResponseResult? = nil
     @Published var tlvDump: String? = nil
     @Published var isReading = false
     @Published var error: String? = nil
@@ -22,6 +23,7 @@ class CardReaderViewModel: ObservableObject {
         error = nil
         certificates = []
         chuid = nil
+        challengeResult = nil
         appLabel = nil
         aidHex = nil
         smCipherSuites = []
@@ -94,6 +96,12 @@ class CardReaderViewModel: ObservableObject {
                 summary.signatureVerified = sig.verified
                 summary.issuerName = sig.issuer
                 certificates.append((name: "Card Authentication (9E)", summary: summary))
+
+                // Challenge-response to prove card has private key
+                status = "Authenticating card..."
+                challengeResult = try? await ChallengeResponse.performChallengeResponse(
+                    card: card, certDER: cert.certDER
+                )
             }
 
             // Read CHUID (always accessible)
@@ -211,6 +219,26 @@ struct CardReaderView: View {
                     if !viewModel.smCipherSuites.isEmpty {
                         LabeledContent("SM Suites",
                                        value: viewModel.smCipherSuites.joined(separator: ", "))
+                    }
+                }
+            }
+
+            // Card Authentication (challenge-response)
+            if let result = viewModel.challengeResult {
+                Section("Card Authentication") {
+                    if result.success {
+                        Label("Card verified (\(result.algorithm))",
+                              systemImage: "checkmark.seal.fill")
+                            .foregroundColor(.green)
+                    } else {
+                        Label("Verification failed",
+                              systemImage: "xmark.seal.fill")
+                            .foregroundColor(.red)
+                        if let err = result.error {
+                            Text(err)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
                     }
                 }
             }

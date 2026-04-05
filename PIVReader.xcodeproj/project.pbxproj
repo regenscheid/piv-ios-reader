@@ -46,6 +46,7 @@
 		F0000037 /* CertChainValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000037 /* CertChainValidator.swift */; };
 		F0000038 /* USBTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000038 /* USBTransport.swift */; };
 		F0000039 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F1000039 /* Assets.xcassets */; };
+		F000003A /* ChallengeResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = F100003A /* ChallengeResponse.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -87,6 +88,7 @@
 		F1000037 /* CertChainValidator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CertChainValidator.swift; sourceTree = "<group>"; };
 		F1000038 /* USBTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = USBTransport.swift; sourceTree = "<group>"; };
 		F1000039 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		F100003A /* ChallengeResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChallengeResponse.swift; sourceTree = "<group>"; };
 		F1000040 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		F1000041 /* PIVReader.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PIVReader.entitlements; sourceTree = "<group>"; };
 		F2000001 /* PIVReader.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PIVReader.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -212,6 +214,7 @@
 				F1000029 /* SMKeyEstablishment.swift */,
 				F1000036 /* FPKICertStore.swift */,
 				F1000037 /* CertChainValidator.swift */,
+				F100003A /* ChallengeResponse.swift */,
 			);
 			path = Crypto;
 			sourceTree = "<group>";
@@ -335,6 +338,7 @@
 			F0000036 /* FPKICertStore.swift in Sources */,
 			F0000037 /* CertChainValidator.swift in Sources */,
 			F0000038 /* USBTransport.swift in Sources */,
+			F000003A /* ChallengeResponse.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
