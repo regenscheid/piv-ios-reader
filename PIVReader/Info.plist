@@ -2,19 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>NFCReaderUsageDescription</key>
-	<string>Read PIV smart card data via NFC</string>
-	<key>com.apple.developer.nfc.readersession.iso7816.select-identifiers</key>
-	<array>
-		<string>A000000308000010000100</string>
-		<string>A00000030800001000</string>
-		<string>A0000003080000</string>
-		<string>A000000116DB00</string>
-		<string>A0000001160000</string>
-		<string>D276000085010100</string>
-		<string>D2760000850101</string>
-		<string></string>
-	</array>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSExceptionDomains</key>
@@ -26,5 +13,16 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>com.apple.developer.nfc.readersession.iso7816.select-identifiers</key>
+	<array>
+		<string>A000000308000010000100</string>
+		<string>A00000030800001000</string>
+		<string>A0000003080000</string>
+		<string>A000000116DB00</string>
+		<string>A0000001160000</string>
+		<string>D276000085010100</string>
+		<string>D2760000850101</string>
+		<string></string>
+	</array>
 </dict>
 </plist>

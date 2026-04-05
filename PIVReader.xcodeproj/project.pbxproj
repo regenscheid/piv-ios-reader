@@ -105,17 +105,6 @@
 		};
 /* End PBXFrameworksBuildPhase section */
 
-/* Begin PBXResourcesBuildPhase section */
-		F2300001 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				F0000039 /* Assets.xcassets in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXResourcesBuildPhase section */
-
 /* Begin PBXGroup section */
 		F4000001 = {
 			isa = PBXGroup;
@@ -296,6 +285,17 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		F2300001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F0000039 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		F2200001 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -332,13 +332,13 @@
 				F0000029 /* SMKeyEstablishment.swift in Sources */,
 				F0000030 /* NFCTransport.swift in Sources */,
 				F0000031 /* Session.swift in Sources */,
-			F0000033 /* FASCNParser.swift in Sources */,
-			F0000034 /* AgencyCodes.swift in Sources */,
-			F0000035 /* PIVChuid.swift in Sources */,
-			F0000036 /* FPKICertStore.swift in Sources */,
-			F0000037 /* CertChainValidator.swift in Sources */,
-			F0000038 /* USBTransport.swift in Sources */,
-			F000003A /* ChallengeResponse.swift in Sources */,
+				F0000033 /* FASCNParser.swift in Sources */,
+				F0000034 /* AgencyCodes.swift in Sources */,
+				F0000035 /* PIVChuid.swift in Sources */,
+				F0000036 /* FPKICertStore.swift in Sources */,
+				F0000037 /* CertChainValidator.swift in Sources */,
+				F0000038 /* USBTransport.swift in Sources */,
+				F000003A /* ChallengeResponse.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -468,7 +468,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = net.regenscheid.PIVReader;
+				PRODUCT_BUNDLE_IDENTIFIER = com.pivforge.PIVReader;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -494,7 +494,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = net.regenscheid.PIVReader;
+				PRODUCT_BUNDLE_IDENTIFIER = com.pivforge.PIVReader;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
