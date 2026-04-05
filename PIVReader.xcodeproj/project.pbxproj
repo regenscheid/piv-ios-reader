@@ -1,0 +1,543 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		F0000001 /* PIVReaderApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001 /* PIVReaderApp.swift */; };
+		F0000002 /* PIVError.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000002 /* PIVError.swift */; };
+		F0000003 /* PIVCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000003 /* PIVCard.swift */; };
+		F0000004 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000004 /* ContentView.swift */; };
+		F0000005 /* CardReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000005 /* CardReaderView.swift */; };
+		F0000006 /* CertificateDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000006 /* CertificateDetailView.swift */; };
+		F0000007 /* PINEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000007 /* PINEntryView.swift */; };
+		F0000008 /* TLV.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000008 /* TLV.swift */; };
+		F0000009 /* CommandAPDU.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000009 /* CommandAPDU.swift */; };
+		F0000010 /* ResponseAPDU.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000010 /* ResponseAPDU.swift */; };
+		F0000011 /* SW.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000011 /* SW.swift */; };
+		F0000012 /* PIVKeyRef.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000012 /* PIVKeyRef.swift */; };
+		F0000013 /* PIVSlot.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000013 /* PIVSlot.swift */; };
+		F0000014 /* PIVAlgorithm.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000014 /* PIVAlgorithm.swift */; };
+		F0000015 /* PIVCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000015 /* PIVCommand.swift */; };
+		F0000016 /* PIVResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000016 /* PIVResponse.swift */; };
+		F0000017 /* PIVExchange.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000017 /* PIVExchange.swift */; };
+		F0000018 /* CardResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000018 /* CardResponse.swift */; };
+		F0000019 /* PIVDataObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000019 /* PIVDataObject.swift */; };
+		F0000020 /* DataObjects.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000020 /* DataObjects.swift */; };
+		F0000021 /* SelectCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000021 /* SelectCommand.swift */; };
+		F0000022 /* GetDataCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000022 /* GetDataCommand.swift */; };
+		F0000023 /* VerifyCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000023 /* VerifyCommand.swift */; };
+		F0000024 /* GeneralAuthenticateCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000024 /* GeneralAuthenticateCommand.swift */; };
+		F0000025 /* CertificateParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000025 /* CertificateParser.swift */; };
+		F0000026 /* CipherSuite.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000026 /* CipherSuite.swift */; };
+		F0000027 /* OpenSSLWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000027 /* OpenSSLWrapper.swift */; };
+		F0000028 /* PIVSecureMessaging.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000028 /* PIVSecureMessaging.swift */; };
+		F0000029 /* SMKeyEstablishment.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000029 /* SMKeyEstablishment.swift */; };
+		F0000030 /* NFCTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000030 /* NFCTransport.swift */; };
+		F0000031 /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000031 /* Session.swift */; };
+		F0000032 /* OpenSSL in Frameworks */ = {isa = PBXBuildFile; productRef = F3000001 /* OpenSSL */; };
+		F0000033 /* FASCNParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000033 /* FASCNParser.swift */; };
+		F0000034 /* AgencyCodes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000034 /* AgencyCodes.swift */; };
+		F0000035 /* PIVChuid.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000035 /* PIVChuid.swift */; };
+		F0000036 /* FPKICertStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000036 /* FPKICertStore.swift */; };
+		F0000037 /* CertChainValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000037 /* CertChainValidator.swift */; };
+		F0000038 /* USBTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000038 /* USBTransport.swift */; };
+		F0000039 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F1000039 /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		F1000001 /* PIVReaderApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PIVReaderApp.swift; sourceTree = "<group>"; };
+		F1000002 /* PIVError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PIVError.swift; sourceTree = "<group>"; };
+		F1000003 /* PIVCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PIVCard.swift; sourceTree = "<group>"; };
+		F1000004 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		F1000005 /* CardReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardReaderView.swift; sourceTree = "<group>"; };
+		F1000006 /* CertificateDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CertificateDetailView.swift; sourceTree = "<group>"; };
+		F1000007 /* PINEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PINEntryView.swift; sourceTree = "<group>"; };
+		F1000008 /* TLV.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TLV.swift; sourceTree = "<group>"; };
+		F1000009 /* CommandAPDU.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandAPDU.swift; sourceTree = "<group>"; };
+		F1000010 /* ResponseAPDU.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResponseAPDU.swift; sourceTree = "<group>"; };
+		F1000011 /* SW.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SW.swift; sourceTree = "<group>"; };
+		F1000012 /* PIVKeyRef.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PIVKeyRef.swift; sourceTree = "<group>"; };
+		F1000013 /* PIVSlot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PIVSlot.swift; sourceTree = "<group>"; };
+		F1000014 /* PIVAlgorithm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PIVAlgorithm.swift; sourceTree = "<group>"; };
+		F1000015 /* PIVCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PIVCommand.swift; sourceTree = "<group>"; };
+		F1000016 /* PIVResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PIVResponse.swift; sourceTree = "<group>"; };
+		F1000017 /* PIVExchange.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PIVExchange.swift; sourceTree = "<group>"; };
+		F1000018 /* CardResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardResponse.swift; sourceTree = "<group>"; };
+		F1000019 /* PIVDataObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PIVDataObject.swift; sourceTree = "<group>"; };
+		F1000020 /* DataObjects.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataObjects.swift; sourceTree = "<group>"; };
+		F1000021 /* SelectCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectCommand.swift; sourceTree = "<group>"; };
+		F1000022 /* GetDataCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetDataCommand.swift; sourceTree = "<group>"; };
+		F1000023 /* VerifyCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerifyCommand.swift; sourceTree = "<group>"; };
+		F1000024 /* GeneralAuthenticateCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralAuthenticateCommand.swift; sourceTree = "<group>"; };
+		F1000025 /* CertificateParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CertificateParser.swift; sourceTree = "<group>"; };
+		F1000026 /* CipherSuite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CipherSuite.swift; sourceTree = "<group>"; };
+		F1000027 /* OpenSSLWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenSSLWrapper.swift; sourceTree = "<group>"; };
+		F1000028 /* PIVSecureMessaging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PIVSecureMessaging.swift; sourceTree = "<group>"; };
+		F1000029 /* SMKeyEstablishment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SMKeyEstablishment.swift; sourceTree = "<group>"; };
+		F1000030 /* NFCTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NFCTransport.swift; sourceTree = "<group>"; };
+		F1000031 /* Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session.swift; sourceTree = "<group>"; };
+		F1000033 /* FASCNParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FASCNParser.swift; sourceTree = "<group>"; };
+		F1000034 /* AgencyCodes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgencyCodes.swift; sourceTree = "<group>"; };
+		F1000035 /* PIVChuid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PIVChuid.swift; sourceTree = "<group>"; };
+		F1000036 /* FPKICertStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FPKICertStore.swift; sourceTree = "<group>"; };
+		F1000037 /* CertChainValidator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CertChainValidator.swift; sourceTree = "<group>"; };
+		F1000038 /* USBTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = USBTransport.swift; sourceTree = "<group>"; };
+		F1000039 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		F1000040 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		F1000041 /* PIVReader.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PIVReader.entitlements; sourceTree = "<group>"; };
+		F2000001 /* PIVReader.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PIVReader.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		F2100001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F0000032 /* OpenSSL in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXResourcesBuildPhase section */
+		F2300001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F0000039 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXGroup section */
+		F4000001 = {
+			isa = PBXGroup;
+			children = (
+				F4000002 /* PIVReader */,
+				F4000010 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		F4000002 /* PIVReader */ = {
+			isa = PBXGroup;
+			children = (
+				F1000001 /* PIVReaderApp.swift */,
+				F1000002 /* PIVError.swift */,
+				F1000003 /* PIVCard.swift */,
+				F1000040 /* Info.plist */,
+				F1000039 /* Assets.xcassets */,
+				F1000041 /* PIVReader.entitlements */,
+				F4000003 /* Views */,
+				F4000004 /* APDU */,
+				F4000005 /* Enums */,
+				F4000006 /* Types */,
+				F4000007 /* Commands */,
+				F4000008 /* Crypto */,
+				F4000009 /* Transport */,
+			);
+			path = PIVReader;
+			sourceTree = "<group>";
+		};
+		F4000003 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				F1000004 /* ContentView.swift */,
+				F1000005 /* CardReaderView.swift */,
+				F1000006 /* CertificateDetailView.swift */,
+				F1000007 /* PINEntryView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		F4000004 /* APDU */ = {
+			isa = PBXGroup;
+			children = (
+				F1000008 /* TLV.swift */,
+				F1000009 /* CommandAPDU.swift */,
+				F1000010 /* ResponseAPDU.swift */,
+				F1000011 /* SW.swift */,
+			);
+			path = APDU;
+			sourceTree = "<group>";
+		};
+		F4000005 /* Enums */ = {
+			isa = PBXGroup;
+			children = (
+				F1000012 /* PIVKeyRef.swift */,
+				F1000013 /* PIVSlot.swift */,
+				F1000014 /* PIVAlgorithm.swift */,
+			);
+			path = Enums;
+			sourceTree = "<group>";
+		};
+		F4000006 /* Types */ = {
+			isa = PBXGroup;
+			children = (
+				F1000015 /* PIVCommand.swift */,
+				F1000016 /* PIVResponse.swift */,
+				F1000017 /* PIVExchange.swift */,
+				F1000018 /* CardResponse.swift */,
+				F1000019 /* PIVDataObject.swift */,
+				F1000035 /* PIVChuid.swift */,
+			);
+			path = Types;
+			sourceTree = "<group>";
+		};
+		F4000007 /* Commands */ = {
+			isa = PBXGroup;
+			children = (
+				F1000020 /* DataObjects.swift */,
+				F1000021 /* SelectCommand.swift */,
+				F1000022 /* GetDataCommand.swift */,
+				F1000023 /* VerifyCommand.swift */,
+				F1000024 /* GeneralAuthenticateCommand.swift */,
+				F1000025 /* CertificateParser.swift */,
+				F1000033 /* FASCNParser.swift */,
+				F1000034 /* AgencyCodes.swift */,
+			);
+			path = Commands;
+			sourceTree = "<group>";
+		};
+		F4000008 /* Crypto */ = {
+			isa = PBXGroup;
+			children = (
+				F1000026 /* CipherSuite.swift */,
+				F1000027 /* OpenSSLWrapper.swift */,
+				F1000028 /* PIVSecureMessaging.swift */,
+				F1000029 /* SMKeyEstablishment.swift */,
+				F1000036 /* FPKICertStore.swift */,
+				F1000037 /* CertChainValidator.swift */,
+			);
+			path = Crypto;
+			sourceTree = "<group>";
+		};
+		F4000009 /* Transport */ = {
+			isa = PBXGroup;
+			children = (
+				F1000030 /* NFCTransport.swift */,
+				F1000031 /* Session.swift */,
+				F1000038 /* USBTransport.swift */,
+			);
+			path = Transport;
+			sourceTree = "<group>";
+		};
+		F4000010 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				F2000001 /* PIVReader.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		F5000001 /* PIVReader */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F7000003 /* Build configuration list for PBXNativeTarget "PIVReader" */;
+			buildPhases = (
+				F2200001 /* Sources */,
+				F2100001 /* Frameworks */,
+				F2300001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PIVReader;
+			packageProductDependencies = (
+				F3000001 /* OpenSSL */,
+			);
+			productName = PIVReader;
+			productReference = F2000001 /* PIVReader.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		F6000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 2640;
+				TargetAttributes = {
+					F5000001 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+				};
+			};
+			buildConfigurationList = F7000001 /* Build configuration list for PBXProject "PIVReader" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = F4000001;
+			packageReferences = (
+				F3100001 /* XCRemoteSwiftPackageReference "OpenSSL" */,
+			);
+			productRefGroup = F4000010 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				F5000001 /* PIVReader */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		F2200001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F0000001 /* PIVReaderApp.swift in Sources */,
+				F0000002 /* PIVError.swift in Sources */,
+				F0000003 /* PIVCard.swift in Sources */,
+				F0000004 /* ContentView.swift in Sources */,
+				F0000005 /* CardReaderView.swift in Sources */,
+				F0000006 /* CertificateDetailView.swift in Sources */,
+				F0000007 /* PINEntryView.swift in Sources */,
+				F0000008 /* TLV.swift in Sources */,
+				F0000009 /* CommandAPDU.swift in Sources */,
+				F0000010 /* ResponseAPDU.swift in Sources */,
+				F0000011 /* SW.swift in Sources */,
+				F0000012 /* PIVKeyRef.swift in Sources */,
+				F0000013 /* PIVSlot.swift in Sources */,
+				F0000014 /* PIVAlgorithm.swift in Sources */,
+				F0000015 /* PIVCommand.swift in Sources */,
+				F0000016 /* PIVResponse.swift in Sources */,
+				F0000017 /* PIVExchange.swift in Sources */,
+				F0000018 /* CardResponse.swift in Sources */,
+				F0000019 /* PIVDataObject.swift in Sources */,
+				F0000020 /* DataObjects.swift in Sources */,
+				F0000021 /* SelectCommand.swift in Sources */,
+				F0000022 /* GetDataCommand.swift in Sources */,
+				F0000023 /* VerifyCommand.swift in Sources */,
+				F0000024 /* GeneralAuthenticateCommand.swift in Sources */,
+				F0000025 /* CertificateParser.swift in Sources */,
+				F0000026 /* CipherSuite.swift in Sources */,
+				F0000027 /* OpenSSLWrapper.swift in Sources */,
+				F0000028 /* PIVSecureMessaging.swift in Sources */,
+				F0000029 /* SMKeyEstablishment.swift in Sources */,
+				F0000030 /* NFCTransport.swift in Sources */,
+				F0000031 /* Session.swift in Sources */,
+			F0000033 /* FASCNParser.swift in Sources */,
+			F0000034 /* AgencyCodes.swift in Sources */,
+			F0000035 /* PIVChuid.swift in Sources */,
+			F0000036 /* FPKICertStore.swift in Sources */,
+			F0000037 /* CertChainValidator.swift in Sources */,
+			F0000038 /* USBTransport.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		F8000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = ANAMY6K3XJ;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		F8000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = ANAMY6K3XJ;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		F8000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = PIVReader/PIVReader.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PIVReader/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "PIV Reader";
+				INFOPLIST_KEY_NFCReaderUsageDescription = "Read PIV smart card data via NFC";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = net.regenscheid.PIVReader;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		F8000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = PIVReader/PIVReader.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PIVReader/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "PIV Reader";
+				INFOPLIST_KEY_NFCReaderUsageDescription = "Read PIV smart card data via NFC";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = net.regenscheid.PIVReader;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		F7000001 /* Build configuration list for PBXProject "PIVReader" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F8000001 /* Debug */,
+				F8000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F7000003 /* Build configuration list for PBXNativeTarget "PIVReader" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F8000003 /* Debug */,
+				F8000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		F3100001 /* XCRemoteSwiftPackageReference "OpenSSL" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/krzyzanowskim/OpenSSL.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.2.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		F3000001 /* OpenSSL */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F3100001 /* XCRemoteSwiftPackageReference "OpenSSL" */;
+			productName = OpenSSL;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = F6000001 /* Project object */;
+}
