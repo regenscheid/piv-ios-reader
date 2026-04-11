@@ -48,6 +48,7 @@
 		F0000039 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F1000039 /* Assets.xcassets */; };
 		F000003A /* ChallengeResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = F100003A /* ChallengeResponse.swift */; };
 		F000003B /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F100003B /* SettingsView.swift */; };
+		F000003C /* TrustStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F100003C /* TrustStore.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -91,6 +92,7 @@
 		F1000039 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		F100003A /* ChallengeResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChallengeResponse.swift; sourceTree = "<group>"; };
 		F100003B /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		F100003C /* TrustStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrustStore.swift; sourceTree = "<group>"; };
 		F1000040 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		F1000041 /* PIVReader.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PIVReader.entitlements; sourceTree = "<group>"; };
 		F2000001 /* PIVReader.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PIVReader.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -207,6 +209,7 @@
 				F1000036 /* FPKICertStore.swift */,
 				F1000037 /* CertChainValidator.swift */,
 				F100003A /* ChallengeResponse.swift */,
+				F100003C /* TrustStore.swift */,
 			);
 			path = Crypto;
 			sourceTree = "<group>";
@@ -343,6 +346,7 @@
 				F0000038 /* USBTransport.swift in Sources */,
 				F000003A /* ChallengeResponse.swift in Sources */,
 				F000003B /* SettingsView.swift in Sources */,
+				F000003C /* TrustStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

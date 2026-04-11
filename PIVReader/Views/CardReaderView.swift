@@ -58,14 +58,14 @@ class CardReaderViewModel: ObservableObject {
             transport = NFCTransport()
         }
 
-        // Start downloading FPKI certs in parallel
-        let fpkiTask = Task { await FPKICertStore.shared.loadCertificates() }
+        // Load trust store (downloads FPKI certs if needed)
+        let trustTask = Task { await TrustStore.shared.loadIfNeeded() }
 
         do {
             if let usb = usbTransport {
                 status = "Connecting to USB reader..."
                 try await usb.connect()
-                await fpkiTask.value
+                await trustTask.value
             } else {
                 status = "Waiting for card..."
                 try await (transport as! NFCTransport).startSession(alertMessage: "Hold your PIV card near iPhone")
@@ -116,8 +116,8 @@ class CardReaderViewModel: ObservableObject {
             let cardAuthResp = try await card.getCertificate(DataObjects.X509_CARD_AUTH)
             if cardAuthResp.success, let cert = cardAuthResp.parsed as? PIVCertificate,
                var summary = cert.summarize() {
-                summary.chainValidation = await validateCert(cert.certDER)
-                let sig = await verifySignature(cert.certDER)
+                summary.chainValidation = validateCert(cert.certDER)
+                let sig = verifySignature(cert.certDER)
                 summary.signatureVerified = sig.verified
                 summary.issuerName = sig.issuer
                 summary.smProtected = smWasActive
@@ -142,8 +142,8 @@ class CardReaderViewModel: ObservableObject {
             let pivAuthResp = try await card.getCertificate(DataObjects.X509_PIV_AUTH)
             if pivAuthResp.success, let cert = pivAuthResp.parsed as? PIVCertificate,
                var summary = cert.summarize() {
-                summary.chainValidation = await validateCert(cert.certDER)
-                let sig = await verifySignature(cert.certDER)
+                summary.chainValidation = validateCert(cert.certDER)
+                let sig = verifySignature(cert.certDER)
                 summary.signatureVerified = sig.verified
                 summary.issuerName = sig.issuer
                 summary.smProtected = smWasActive
@@ -244,8 +244,8 @@ class CardReaderViewModel: ObservableObject {
             let cardAuthResp = try await card.getCertificate(DataObjects.X509_CARD_AUTH)
             if cardAuthResp.success, let cert = cardAuthResp.parsed as? PIVCertificate,
                var summary = cert.summarize() {
-                summary.chainValidation = await validateCert(cert.certDER)
-                let sig = await verifySignature(cert.certDER)
+                summary.chainValidation = validateCert(cert.certDER)
+                let sig = verifySignature(cert.certDER)
                 summary.signatureVerified = sig.verified
                 summary.issuerName = sig.issuer
                 summary.smProtected = true
@@ -269,8 +269,8 @@ class CardReaderViewModel: ObservableObject {
             let pivAuthResp = try await card.getCertificate(DataObjects.X509_PIV_AUTH)
             if pivAuthResp.success, let cert = pivAuthResp.parsed as? PIVCertificate,
                var summary = cert.summarize() {
-                summary.chainValidation = await validateCert(cert.certDER)
-                let sig = await verifySignature(cert.certDER)
+                summary.chainValidation = validateCert(cert.certDER)
+                let sig = verifySignature(cert.certDER)
                 summary.signatureVerified = sig.verified
                 summary.issuerName = sig.issuer
                 summary.smProtected = true
@@ -282,8 +282,8 @@ class CardReaderViewModel: ObservableObject {
             let digSigResp = try await card.getCertificate(DataObjects.X509_DIGITAL_SIG)
             if digSigResp.success, let cert = digSigResp.parsed as? PIVCertificate,
                var summary = cert.summarize() {
-                summary.chainValidation = await validateCert(cert.certDER)
-                let sig = await verifySignature(cert.certDER)
+                summary.chainValidation = validateCert(cert.certDER)
+                let sig = verifySignature(cert.certDER)
                 summary.signatureVerified = sig.verified
                 summary.issuerName = sig.issuer
                 summary.smProtected = true
@@ -295,8 +295,8 @@ class CardReaderViewModel: ObservableObject {
             let keyMgmtResp = try await card.getCertificate(DataObjects.X509_KEY_MGMT)
             if keyMgmtResp.success, let cert = keyMgmtResp.parsed as? PIVCertificate,
                var summary = cert.summarize() {
-                summary.chainValidation = await validateCert(cert.certDER)
-                let sig = await verifySignature(cert.certDER)
+                summary.chainValidation = validateCert(cert.certDER)
+                let sig = verifySignature(cert.certDER)
                 summary.signatureVerified = sig.verified
                 summary.issuerName = sig.issuer
                 summary.smProtected = true
@@ -317,27 +317,20 @@ class CardReaderViewModel: ObservableObject {
 
     // MARK: - Helpers
 
-    private func validateCert(_ certDER: Data) async -> ValidationResult {
-        guard let certs = await FPKICertStore.shared.getCertificates() else {
-            return .notEvaluated
-        }
-        return CertChainValidator.validate(
-            leafDER: certDER,
-            intermediateDERs: certs.intermediates,
-            rootDER: certs.root
-        )
+    private func validateCert(_ certDER: Data) -> ValidationResult {
+        let store = TrustStore.shared
+        guard store.hasTrustAnchors else { return .notEvaluated }
+        return CertChainValidator.validate(leafDER: certDER, trustStore: store)
     }
 
-    private func verifySignature(_ certDER: Data) async -> (verified: Bool, issuer: String?) {
+    private func verifySignature(_ certDER: Data) -> (verified: Bool, issuer: String?) {
         if let certIssuer = PIVCrypto.getCertIssuerName(certDER) {
             print("Cert issuer: \(certIssuer)")
         }
 
-        var candidates = [Data]()
-        if let certs = await FPKICertStore.shared.getCertificates() {
-            candidates.append(contentsOf: certs.intermediates)
-            candidates.append(certs.root)
-        }
+        let store = TrustStore.shared
+        var candidates = store.enabledIntermediates
+        candidates.append(contentsOf: store.enabledTrustAnchors)
 
         if PIVCrypto.isSelfSigned(certDER: certDER) {
             return (true, "Self-signed")

@@ -1,37 +1,48 @@
 import Foundation
 import Security
 
-/// Result of certificate chain validation against FPKI trust anchors.
+/// Result of certificate chain validation against configured trust anchors.
 enum ValidationResult {
     case valid
     case invalid(String)
     case notEvaluated
 }
 
-/// Validates a leaf certificate against the FPKI Common Policy CA G2 root
+/// Validates a leaf certificate against configured trust anchors
 /// using the iOS SecTrust API.
 struct CertChainValidator {
+
+    /// Validate a leaf certificate's chain against the TrustStore.
+    static func validate(leafDER: Data, trustStore: TrustStore) -> ValidationResult {
+        let anchors = trustStore.enabledTrustAnchors
+        let intermediates = trustStore.enabledIntermediates
+
+        guard !anchors.isEmpty else {
+            return .invalid("No trust anchors configured")
+        }
+
+        return validate(
+            leafDER: leafDER,
+            intermediateDERs: intermediates,
+            anchorDERs: anchors
+        )
+    }
 
     /// Validate a leaf certificate's chain.
     ///
     /// - Parameters:
     ///   - leafDER: The end-entity certificate in DER format.
     ///   - intermediateDERs: All known intermediate CA certificates (DER).
-    ///   - rootDER: The FPKI Common Policy CA G2 root certificate (DER).
+    ///   - anchorDERs: Trust anchor certificates (DER). All are set as anchors.
     /// - Returns: `.valid` if the chain validates, `.invalid(reason)` otherwise.
     static func validate(
         leafDER: Data,
         intermediateDERs: [Data],
-        rootDER: Data
+        anchorDERs: [Data]
     ) -> ValidationResult {
         // Create SecCertificate for the leaf
         guard let leafCert = SecCertificateCreateWithData(nil, leafDER as CFData) else {
             return .invalid("Failed to parse leaf certificate")
-        }
-
-        // Create SecCertificate for the root
-        guard let rootCert = SecCertificateCreateWithData(nil, rootDER as CFData) else {
-            return .invalid("Failed to parse root certificate")
         }
 
         // Build the certificate chain array: leaf + intermediates
@@ -40,6 +51,17 @@ struct CertChainValidator {
             if let cert = SecCertificateCreateWithData(nil, intermDER as CFData) {
                 certChain.append(cert)
             }
+        }
+
+        // Parse trust anchors
+        var anchorCerts: [SecCertificate] = []
+        for anchorDER in anchorDERs {
+            if let cert = SecCertificateCreateWithData(nil, anchorDER as CFData) {
+                anchorCerts.append(cert)
+            }
+        }
+        guard !anchorCerts.isEmpty else {
+            return .invalid("No valid trust anchor certificates")
         }
 
         // Create trust evaluation policy
@@ -56,13 +78,13 @@ struct CertChainValidator {
             return .invalid("SecTrustCreateWithCertificates failed: \(status)")
         }
 
-        // Set the FPKI root as the only trust anchor
-        let anchorStatus = SecTrustSetAnchorCertificates(trust, [rootCert] as CFArray)
+        // Set configured anchors as the only trust anchors
+        let anchorStatus = SecTrustSetAnchorCertificates(trust, anchorCerts as CFArray)
         guard anchorStatus == errSecSuccess else {
             return .invalid("SecTrustSetAnchorCertificates failed: \(anchorStatus)")
         }
 
-        // Only trust our anchor, not the system trust store
+        // Only trust our anchors, not the system trust store
         SecTrustSetAnchorCertificatesOnly(trust, true)
 
         // Evaluate

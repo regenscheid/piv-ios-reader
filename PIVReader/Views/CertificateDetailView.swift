@@ -42,7 +42,7 @@ struct CertificateDetailView: View {
             Section("Chain Validation") {
                 switch summary.chainValidation {
                 case .valid:
-                    Label("Valid — chains to FCPCA G2",
+                    Label("Valid — chains to trusted root",
                           systemImage: "checkmark.shield.fill")
                         .foregroundColor(.green)
                 case .invalid(let reason):
