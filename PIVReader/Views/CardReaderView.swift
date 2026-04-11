@@ -159,7 +159,7 @@ class CardReaderViewModel: ObservableObject {
     /// Verify the certificate's signature against known intermediate/root certs.
     private func verifySignature(_ certDER: Data) async -> (verified: Bool, issuer: String?) {
         // Log the cert's issuer field for debugging
-        if let certIssuer = OpenSSLCrypto.getCertIssuerName(certDER) {
+        if let certIssuer = PIVCrypto.getCertIssuerName(certDER) {
             print("Cert issuer: \(certIssuer)")
         }
 
@@ -174,11 +174,11 @@ class CardReaderViewModel: ObservableObject {
         }
 
         // Also check if self-signed
-        if OpenSSLCrypto.isSelfSigned(certDER: certDER) {
+        if PIVCrypto.isSelfSigned(certDER: certDER) {
             return (true, "Self-signed")
         }
 
-        if let issuer = OpenSSLCrypto.verifyCertificateSignature(
+        if let issuer = PIVCrypto.verifyCertificateSignature(
             certDER: certDER,
             issuerCandidateDERs: candidates
         ) {

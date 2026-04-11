@@ -27,7 +27,7 @@ struct PIVCertificate: PIVDataObject {
         }
         let subject = SecCertificateCopySubjectSummary(secCert) as String? ?? "Unknown"
         // SecCertificate provides limited parsing; for full details
-        // you would parse the DER ASN.1 directly or use OpenSSL.
+        // you would parse the DER ASN.1 directly or use swift-certificates.
         return CertificateSummary(
             subject: subject,
             derLength: certDER.count,

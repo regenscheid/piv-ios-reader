@@ -76,7 +76,7 @@ class ClientPIVSM {
         if !data.isEmpty {
             let padded = smPad(data)
             let iv = cmdIV()
-            let encrypted = OpenSSLCrypto.aesCBCEncrypt(key: skEnc, iv: iv, plaintext: padded)
+            let encrypted = PIVCrypto.aesCBCEncrypt(key: skEnc, iv: iv, plaintext: padded)
             // Tag 87 value = 0x01 (padding indicator) || ciphertext
             var tag87Value = Data([0x01])
             tag87Value.append(encrypted)
@@ -101,7 +101,7 @@ class ClientPIVSM {
         var macInput = cmdMCV
         macInput.append(header)
         macInput.append(smData)
-        let fullMAC = OpenSSLCrypto.aesCMAC(key: skMAC, data: macInput)
+        let fullMAC = PIVCrypto.aesCMAC(key: skMAC, data: macInput)
 
         // Update MCV with full 16-byte MAC
         cmdMCV = fullMAC
@@ -182,7 +182,7 @@ class ClientPIVSM {
         for tlv in tlvs where tlv.tag != TAG_MAC {
             macInput.append(buildTLV(tag: tlv.tag, value: tlv.value))
         }
-        let expectedMAC = OpenSSLCrypto.aesCMAC(key: skRMAC, data: macInput)
+        let expectedMAC = PIVCrypto.aesCMAC(key: skRMAC, data: macInput)
         rspMCV = expectedMAC
 
         guard mac == expectedMAC.prefix(8) else {
@@ -193,7 +193,7 @@ class ClientPIVSM {
         var plaintext = Data()
         if let ct = encryptedData, !ct.isEmpty {
             let iv = rspIV()
-            let decrypted = OpenSSLCrypto.aesCBCDecrypt(key: skEnc, iv: iv, ciphertext: Data(ct))
+            let decrypted = PIVCrypto.aesCBCDecrypt(key: skEnc, iv: iv, ciphertext: Data(ct))
             guard let unpadded = smUnpad(decrypted) else {
                 throw PIVError.smDecryptFailed
             }
@@ -222,7 +222,7 @@ class ClientPIVSM {
         block[13] = UInt8((c >> 16) & 0xFF)
         block[14] = UInt8((c >> 8) & 0xFF)
         block[15] = UInt8(c & 0xFF)
-        return OpenSSLCrypto.aesECBEncrypt(key: skEnc, block: block)
+        return PIVCrypto.aesECBEncrypt(key: skEnc, block: block)
     }
 
     /// Response IV: AES-ECB(skEnc, 0x80 || counter block).
@@ -234,6 +234,6 @@ class ClientPIVSM {
         block[13] = UInt8((c >> 16) & 0xFF)
         block[14] = UInt8((c >> 8) & 0xFF)
         block[15] = UInt8(c & 0xFF)
-        return OpenSSLCrypto.aesECBEncrypt(key: skEnc, block: block)
+        return PIVCrypto.aesECBEncrypt(key: skEnc, block: block)
     }
 }

@@ -1,6 +1,6 @@
 import Foundation
 import CommonCrypto
-import OpenSSL
+import Security
 
 // MARK: - Algorithm Detection
 
@@ -69,45 +69,28 @@ struct ChallengeResponseResult {
 /// 4. Verify returned signature against certificate's public key
 enum ChallengeResponse {
 
-    /// Detect the algorithm from a certificate's public key using OpenSSL.
+    /// Detect the algorithm from a certificate's public key using Security.framework.
     static func detectAlgorithm(certDER: Data) -> DetectedAlgorithm? {
-        return certDER.withUnsafeBytes { (rawPtr: UnsafeRawBufferPointer) -> DetectedAlgorithm? in
-            var ptr: UnsafePointer<UInt8>? = rawPtr.baseAddress?.assumingMemoryBound(to: UInt8.self)
-            guard let x509 = d2i_X509(nil, &ptr, rawPtr.count) else { return nil }
-            defer { X509_free(x509) }
-
-            guard let pubkey = X509_get0_pubkey(x509) else { return nil }
-
-            let keyType = EVP_PKEY_get_base_id(pubkey)
-
-            if keyType == EVP_PKEY_RSA {
-                var n: OpaquePointer? // BIGNUM
-                guard EVP_PKEY_get_bn_param(pubkey, "n", &n) == 1, let n else { return nil }
-                defer { BN_free(n) }
-                let bits = BN_num_bits(n)
-                if bits <= 2048 { return .rsa2048 }
-                return .rsa3072
-            }
-
-            if keyType == EVP_PKEY_EC {
-                // Get curve name
-                var buf = [CChar](repeating: 0, count: 64)
-                var len = 0
-                guard EVP_PKEY_get_utf8_string_param(pubkey, "group", &buf, buf.count, &len) == 1 else {
-                    return nil
-                }
-                let curveName = String(cString: buf)
-                if curveName.contains("256") || curveName.contains("prime256") {
-                    return .eccP256
-                }
-                if curveName.contains("384") {
-                    return .eccP384
-                }
-                return nil
-            }
-
+        guard let secCert = SecCertificateCreateWithData(nil, certDER as CFData),
+              let secKey = SecCertificateCopyKey(secCert) else {
             return nil
         }
+
+        guard let attributes = SecKeyCopyAttributes(secKey) as? [CFString: Any],
+              let keyType = attributes[kSecAttrKeyType] as? String,
+              let keySizeBits = attributes[kSecAttrKeySizeInBits] as? Int else {
+            return nil
+        }
+
+        if keyType == (kSecAttrKeyTypeRSA as String) {
+            return keySizeBits <= 2048 ? .rsa2048 : .rsa3072
+        }
+
+        if keyType == (kSecAttrKeyTypeECSECPrimeRandom as String) {
+            return keySizeBits <= 256 ? .eccP256 : .eccP384
+        }
+
+        return nil
     }
 
     // MARK: - PKCS#1 v1.5 Padding
@@ -142,59 +125,50 @@ enum ChallengeResponse {
     /// Compute SHA-256 or SHA-384 digest.
     private static func computeDigest(_ data: Data, useSHA384: Bool) -> Data {
         if useSHA384 {
-            return OpenSSLCrypto.sha384(data)
+            return PIVCrypto.sha384(data)
         } else {
-            return OpenSSLCrypto.sha256(data)
+            return PIVCrypto.sha256(data)
         }
     }
 
     // MARK: - Signature Verification
 
-    /// Verify a signature against a certificate's public key using OpenSSL EVP_PKEY_verify.
+    /// Verify a signature against a certificate's public key using Security.framework.
     ///
-    /// - For RSA: verifies PKCS#1 v1.5 signature (card signed the padded block)
-    /// - For ECC: verifies ECDSA DER-encoded (r, s) signature
+    /// - For RSA: verifies PKCS#1 v1.5 signature over digest
+    /// - For ECC: verifies ECDSA DER-encoded (r, s) signature over digest
     static func verifySignature(
         certDER: Data,
         signature: Data,
         digest: Data,
         algorithm: DetectedAlgorithm
     ) -> Bool {
-        return certDER.withUnsafeBytes { (certRaw: UnsafeRawBufferPointer) -> Bool in
-            var certPtr: UnsafePointer<UInt8>? = certRaw.baseAddress?.assumingMemoryBound(to: UInt8.self)
-            guard let x509 = d2i_X509(nil, &certPtr, certRaw.count) else { return false }
-            defer { X509_free(x509) }
-
-            guard let pubkey = X509_get0_pubkey(x509) else { return false }
-            guard let ctx = EVP_PKEY_CTX_new(pubkey, nil) else { return false }
-            defer { EVP_PKEY_CTX_free(ctx) }
-
-            guard EVP_PKEY_verify_init(ctx) == 1 else { return false }
-
-            if algorithm.isRSA {
-                // Set RSA PKCS#1 v1.5 padding
-                EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_PADDING)
-            }
-
-            // Set hash algorithm
-            let md = algorithm.usesSHA384 ? EVP_sha384() : EVP_sha256()
-            EVP_PKEY_CTX_set_signature_md(ctx, md)
-
-            // Verify
-            let result = signature.withUnsafeBytes { sigPtr in
-                digest.withUnsafeBytes { digPtr in
-                    EVP_PKEY_verify(
-                        ctx,
-                        sigPtr.baseAddress?.assumingMemoryBound(to: UInt8.self),
-                        signature.count,
-                        digPtr.baseAddress?.assumingMemoryBound(to: UInt8.self),
-                        digest.count
-                    )
-                }
-            }
-
-            return result == 1
+        guard let secCert = SecCertificateCreateWithData(nil, certDER as CFData),
+              let secKey = SecCertificateCopyKey(secCert) else {
+            return false
         }
+
+        let secAlgorithm: SecKeyAlgorithm
+        if algorithm.isRSA {
+            secAlgorithm = algorithm.usesSHA384
+                ? .rsaSignatureDigestPKCS1v15SHA384
+                : .rsaSignatureDigestPKCS1v15SHA256
+        } else {
+            secAlgorithm = algorithm.usesSHA384
+                ? .ecdsaSignatureDigestX962SHA384
+                : .ecdsaSignatureDigestX962SHA256
+        }
+
+        var error: Unmanaged<CFError>?
+        let result = SecKeyVerifySignature(
+            secKey,
+            secAlgorithm,
+            digest as CFData,
+            signature as CFData,
+            &error
+        )
+
+        return result
     }
 
     // MARK: - Perform Challenge-Response

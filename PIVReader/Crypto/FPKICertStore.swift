@@ -34,8 +34,8 @@ actor FPKICertStore {
             rootCertDER = rootBytes
             print("FPKI: Root cert downloaded (\(rootBytes.count) bytes)")
 
-            // Intermediates are in a PKCS#7 bundle — parse with OpenSSL
-            intermediateCertDERs = try OpenSSLCrypto.parsePKCS7Certificates(p7bBytes)
+            // Intermediates are in a PKCS#7 bundle — parse with SwiftASN1
+            intermediateCertDERs = try PIVCrypto.parsePKCS7Certificates(p7bBytes)
             print("FPKI: Loaded \(intermediateCertDERs?.count ?? 0) intermediate certs from P7B (\(p7bBytes.count) bytes)")
 
             loadError = nil

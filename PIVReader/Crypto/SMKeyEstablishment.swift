@@ -28,7 +28,8 @@ func performSMKeyEstablishment(
     let curve = cipherSuite.curve
 
     // Step 1: Generate ephemeral key pair
-    let (ephPrivateKey, ephPublicPoint) = try OpenSSLCrypto.ecdhGenerateKeyPair(curve: curve)
+    let keyPair = try PIVCrypto.ecdhGenerateKeyPair(curve: curve)
+    let ephPublicPoint = keyPair.publicPoint
 
     // Step 2: Build and send GENERAL AUTHENTICATE
     // CB_H = cipher suite byte, ID_sH = host identity, Q_eH = ephemeral public point
@@ -82,11 +83,7 @@ func performSMKeyEstablishment(
     let qSICC = try extractPublicKeyFromCVC(Data(cICC), curve: curve)
 
     // Step 5: ECDH shared secret
-    let z = try OpenSSLCrypto.ecdhComputeSharedSecret(
-        privateKey: ephPrivateKey,
-        peerPublicPoint: qSICC,
-        curve: curve
-    )
+    let z = try keyPair.computeSharedSecret(qSICC)
 
     // Step 6: KDF — derive SK_CFRM, SK_MAC, SK_ENC, SK_RMAC
     let keyMaterial = concatKDF(
@@ -114,7 +111,7 @@ func performSMKeyEstablishment(
     // T16(Q_eH) = first 16 bytes of ephemeral public point (minus 04 prefix)
     authInput.append(ephPublicPoint.dropFirst().prefix(16))
 
-    let expectedAuth = OpenSSLCrypto.aesCMAC(key: Data(skCFRM), data: authInput)
+    let expectedAuth = PIVCrypto.aesCMAC(key: Data(skCFRM), data: authInput)
     guard Data(authCryptogram) == expectedAuth.prefix(macLen) else {
         throw PIVError.smEstablishmentFailed("AuthCryptogram verification failed")
     }
@@ -182,7 +179,7 @@ func concatKDF(
         input.append(UInt8(i & 0xFF))
         input.append(z)
         input.append(otherInfo)
-        output.append(OpenSSLCrypto.hash(input, algorithm: cipherSuite.hashAlgorithm))
+        output.append(PIVCrypto.hash(input, algorithm: cipherSuite.hashAlgorithm))
     }
 
     return output.prefix(needed)
