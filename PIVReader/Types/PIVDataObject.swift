@@ -46,6 +46,7 @@ struct CertificateSummary {
     var chainValidation: ValidationResult = .notEvaluated
     var signatureVerified: Bool = false  // true if signature verified against a known issuer
     var issuerName: String? = nil        // issuer that verified the signature
+    var smProtected: Bool = false        // true if read was SM-protected
 }
 
 // MARK: - PIVPublicKey

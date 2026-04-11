@@ -32,8 +32,8 @@ func performSMKeyEstablishment(
     let ephPublicPoint = keyPair.publicPoint
 
     // Step 2: Build and send GENERAL AUTHENTICATE
-    // CB_H = cipher suite byte, ID_sH = host identity, Q_eH = ephemeral public point
-    let cbH: UInt8 = cipherSuite.rawValue
+    // CB_H = control byte (0x00 = no persistent binding), ID_sH = host identity, Q_eH = ephemeral public point
+    let cbH: UInt8 = 0x00
     var tag81Value = Data([cbH])
     tag81Value.append(idSH)
     tag81Value.append(ephPublicPoint)
@@ -80,19 +80,23 @@ func performSMKeyEstablishment(
     let cICC = responseData[headerLen...]
 
     // Step 4: Extract card static public key from CVC
-    let qSICC = try extractPublicKeyFromCVC(Data(cICC), curve: curve)
+    let cICCData = Data(cICC)
+    let qSICC = try extractPublicKeyFromCVC(cICCData, curve: curve)
 
     // Step 5: ECDH shared secret
     let z = try keyPair.computeSharedSecret(qSICC)
 
-    // Step 6: KDF — derive SK_CFRM, SK_MAC, SK_ENC, SK_RMAC
+    // Step 6: ID_sICC = leftmost 8 bytes of SHA-256(C_ICC)
+    let idSICC = PIVCrypto.sha256(cICCData).prefix(8)
+
+    // Step 7: KDF — derive SK_CFRM, SK_MAC, SK_ENC, SK_RMAC
     let keyMaterial = concatKDF(
         z: z,
         cipherSuite: cipherSuite,
         idSH: idSH,
         cbH: cbH,
         ephPublicPoint: ephPublicPoint,
-        idSICC: Data([cbICC]),  // simplified; real impl extracts from CVC
+        idSICC: Data(idSICC),
         nICC: Data(nICC),
         cbICC: cbICC
     )
@@ -103,13 +107,13 @@ func performSMKeyEstablishment(
     let skENC  = keyMaterial[(keyLen * 2)..<(keyLen * 3)]
     let skRMAC = keyMaterial[(keyLen * 3)..<(keyLen * 4)]
 
-    // Step 7: Verify AuthCryptogram
+    // Step 8: Verify AuthCryptogram
     // AuthCryptogram = CMAC(SK_CFRM, "KC_1_V" || ID_sICC || ID_sH || Q_eH)
+    // Q_eH in MacData = X||Y coordinates only (no 04 prefix), per SP 800-73-5 §4.1.7
     var authInput = Data("KC_1_V".utf8)
-    authInput.append(Data([cbICC]))  // ID_sICC (simplified)
+    authInput.append(Data(idSICC))
     authInput.append(idSH)
-    // T16(Q_eH) = first 16 bytes of ephemeral public point (minus 04 prefix)
-    authInput.append(ephPublicPoint.dropFirst().prefix(16))
+    authInput.append(ephPublicPoint.dropFirst())  // X||Y coordinates without 04 prefix
 
     let expectedAuth = PIVCrypto.aesCMAC(key: Data(skCFRM), data: authInput)
     guard Data(authCryptogram) == expectedAuth.prefix(macLen) else {

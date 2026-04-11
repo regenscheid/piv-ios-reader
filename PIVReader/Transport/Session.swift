@@ -98,23 +98,51 @@ class Session {
     }
 
     /// Transmit with SM wrapping and unwrapping.
+    ///
+    /// The SM payload is wrapped once (single encryption + MAC), then split
+    /// across transport chunks if it exceeds maxAPDULength. This matches
+    /// SP 800-73-5 Fig. 4: the MAC covers the entire payload, and chaining
+    /// only splits the encrypted data at the transport level.
     private func transmitSM(_ apdu: CommandAPDU, sm: ClientPIVSM) async throws -> CardResponse {
         let command = PIVCommand(from: apdu)
 
-        // Wrap the command
+        // Wrap the command (single encryption + MAC over entire payload)
         let wrappedBytes = sm.wrapCommand(
             cla: apdu.cla, ins: apdu.ins, p1: apdu.p1, p2: apdu.p2,
             data: apdu.data, le: apdu.le
         )
 
-        // Send wrapped APDU (may need command chaining if SM payload > 255)
         let wrappedAPDU = CommandAPDU.fromBytes(wrappedBytes)!
-        let resp: ResponseAPDU
+        let smPayload = wrappedAPDU.data
+        var resp: ResponseAPDU
 
-        if wrappedAPDU.data.count > maxAPDULength {
-            // Chain the SM-wrapped payload
-            let chainResp = try await transmitChained(wrappedAPDU, command: command)
-            resp = ResponseAPDU(data: chainResp.data, sw1: chainResp.sw1, sw2: chainResp.sw2)
+        if smPayload.count > maxAPDULength {
+            // SM command chaining: split the SM payload across transport chunks.
+            // First chunk(s): CLA with chaining bit (0x10), no Le
+            // Last chunk:     CLA without chaining bit, Le=0x00
+            let chunks = stride(from: 0, to: smPayload.count, by: maxAPDULength).map {
+                smPayload[$0..<min($0 + maxAPDULength, smPayload.count)]
+            }
+
+            resp = ResponseAPDU(data: Data(), sw1: 0x6F, sw2: 0x00)
+            for (i, chunk) in chunks.enumerated() {
+                let isLast = (i == chunks.count - 1)
+                let chunkCLA: UInt8 = isLast
+                    ? (wrappedAPDU.cla & ~0x10)
+                    : (wrappedAPDU.cla | 0x10)
+                let chunkAPDU = CommandAPDU(
+                    cla: chunkCLA,
+                    ins: wrappedAPDU.ins,
+                    p1: wrappedAPDU.p1,
+                    p2: wrappedAPDU.p2,
+                    data: Data(chunk),
+                    le: isLast ? 0 : nil
+                )
+                resp = try await transport.transmit(chunkAPDU)
+                if !isLast && !resp.success {
+                    break
+                }
+            }
         } else {
             resp = try await transport.transmit(wrappedAPDU)
         }

@@ -143,19 +143,42 @@ class PIVCard {
 
     // MARK: - Secure Messaging
 
+    /// Detect the preferred SM cipher suite from the cached SELECT response.
+    ///
+    /// Prefers CS7 (P-384/AES-256) if advertised, falls back to CS2 (P-256/AES-128).
+    /// Returns nil if the card does not advertise any SM cipher suite.
+    func detectSMCipherSuite() -> CipherSuite? {
+        guard let algos = selectInfo?["algorithm_identifiers"] as? [String] else {
+            return nil
+        }
+        // Prefer CS7 (0x2E), fall back to CS2 (0x27)
+        if algos.contains("2E") { return .cs7 }
+        if algos.contains("27") { return .cs2 }
+        return nil
+    }
+
+    /// True if the card advertises SM support in its SELECT response.
+    var supportsSM: Bool { detectSMCipherSuite() != nil }
+
     /// Establish SM via ECDH key agreement.
     ///
     /// After this call, all subsequent commands are automatically SM-wrapped.
+    /// If no cipher suite is specified, auto-detects from the SELECT response.
     @discardableResult
-    func establishSM(cipherSuite: CipherSuite = .cs2,
+    func establishSM(cipherSuite: CipherSuite? = nil,
                      idSH: Data = Data(count: 8)) async throws -> CipherSuite {
+        guard let suite = cipherSuite ?? detectSMCipherSuite() else {
+            throw PIVError.smEstablishmentFailed(
+                "Card does not advertise an SM cipher suite in SELECT response"
+            )
+        }
         let sm = try await performSMKeyEstablishment(
             session: session,
-            cipherSuite: cipherSuite,
+            cipherSuite: suite,
             idSH: idSH
         )
         session.activateSM(sm)
-        return cipherSuite
+        return suite
     }
 
     /// Tear down SM session.

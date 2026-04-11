@@ -4,18 +4,24 @@ import SwiftUI
 
 @MainActor
 class CardReaderViewModel: ObservableObject {
+    @AppStorage("enableSM") var enableSM: Bool = false
+
     @Published var status: String = "Tap 'Read Card' to begin"
     @Published var appLabel: String? = nil
     @Published var aidHex: String? = nil
     @Published var smCipherSuites: [String] = []
+    @Published var smStatus: String? = nil
     @Published var certificates: [(name: String, summary: CertificateSummary)] = []
     @Published var chuid: PIVChuid? = nil
     @Published var challengeResult: ChallengeResponseResult? = nil
     @Published var tlvDump: String? = nil
     @Published var isReading = false
     @Published var error: String? = nil
-    @Published var showPINEntry = false
-    @Published var pinAction: ((String) -> Void)? = nil
+
+    /// True if VCI entry should be offered (card supports SM and some objects need VCI).
+    @Published var vciAvailable = false
+    /// Controls the pairing code entry sheet.
+    @Published var showVCIEntry = false
 
     func startReading(useUSB: Bool = false) {
         guard !isReading else { return }
@@ -27,13 +33,17 @@ class CardReaderViewModel: ObservableObject {
         appLabel = nil
         aidHex = nil
         smCipherSuites = []
+        smStatus = nil
         tlvDump = nil
+        vciAvailable = false
 
         Task {
             await readCard(useUSB: useUSB)
             isReading = false
         }
     }
+
+    // MARK: - Standard Card Read
 
     private func readCard(useUSB: Bool) async {
         let transport: CardTransport
@@ -55,7 +65,6 @@ class CardReaderViewModel: ObservableObject {
             if let usb = usbTransport {
                 status = "Connecting to USB reader..."
                 try await usb.connect()
-                // USB connects instantly — wait for FPKI certs before proceeding
                 await fpkiTask.value
             } else {
                 status = "Waiting for card..."
@@ -81,10 +90,26 @@ class CardReaderViewModel: ObservableObject {
                 smCipherSuites = (info["algorithm_identifiers"] as? [String]) ?? []
             }
 
-            // Show raw TLV
             if !selectResp.data.isEmpty {
                 tlvDump = displayTLV(selectResp.data)
             }
+
+            // Attempt SM if enabled in settings and card supports it
+            if enableSM && card.supportsSM {
+                status = "Establishing Secure Messaging..."
+                do {
+                    let suite = try await card.establishSM()
+                    let suiteName = suite == .cs7 ? "CS7 (P-384/AES-256)" : "CS2 (P-256/AES-128)"
+                    smStatus = "Active: \(suiteName)"
+                    print("SM established: \(suiteName)")
+                } catch {
+                    // Graceful fallback — continue without SM
+                    smStatus = "Failed"
+                    print("SM establishment failed (falling back): \(error)")
+                }
+            }
+
+            let smWasActive = card.smActive
 
             // Read Card Auth cert (always accessible contactless, no PIN)
             status = "Reading Card Authentication certificate..."
@@ -95,6 +120,7 @@ class CardReaderViewModel: ObservableObject {
                 let sig = await verifySignature(cert.certDER)
                 summary.signatureVerified = sig.verified
                 summary.issuerName = sig.issuer
+                summary.smProtected = smWasActive
                 certificates.append((name: "Card Authentication (9E)", summary: summary))
 
                 // Challenge-response to prove card has private key
@@ -111,7 +137,7 @@ class CardReaderViewModel: ObservableObject {
                 chuid = parsed
             }
 
-            // Try reading PIV Auth cert (may need VCI on contactless)
+            // Try reading PIV Auth cert (needs VCI on contactless)
             status = "Reading PIV Authentication certificate..."
             let pivAuthResp = try await card.getCertificate(DataObjects.X509_PIV_AUTH)
             if pivAuthResp.success, let cert = pivAuthResp.parsed as? PIVCertificate,
@@ -120,9 +146,13 @@ class CardReaderViewModel: ObservableObject {
                 let sig = await verifySignature(cert.certDER)
                 summary.signatureVerified = sig.verified
                 summary.issuerName = sig.issuer
+                summary.smProtected = smWasActive
                 certificates.append((name: "PIV Authentication (9A)", summary: summary))
             } else if pivAuthResp.sw == SW.securityNotSatisfied.rawValue {
-                status = "PIV Auth cert requires PIN or VCI"
+                // Card has the object but it requires VCI
+                if card.supportsSM {
+                    vciAvailable = true
+                }
             }
 
             // Done
@@ -145,6 +175,148 @@ class CardReaderViewModel: ObservableObject {
         }
     }
 
+    // MARK: - VCI Read (SM + Pairing Code)
+
+    func readCardWithVCI(pairingCode: String) {
+        guard !isReading else { return }
+        isReading = true
+        error = nil
+
+        Task {
+            await performVCIRead(pairingCode: pairingCode)
+            isReading = false
+        }
+    }
+
+    private func performVCIRead(pairingCode: String) async {
+        let transport = NFCTransport()
+
+        do {
+            status = "Waiting for card (VCI)..."
+            try await transport.startSession(alertMessage: "Hold your PIV card near iPhone")
+
+            let card = PIVCard(transport: transport)
+
+            // SELECT PIV
+            status = "Selecting PIV application..."
+            let selectResp = try await card.select()
+            guard selectResp.success else {
+                throw PIVError.commandFailed(sw: selectResp.sw, description: "SELECT failed")
+            }
+
+            // Establish SM (required for VCI)
+            status = "Establishing Secure Messaging..."
+            let suite = try await card.establishSM()
+            let suiteName = suite == .cs7 ? "CS7 (P-384/AES-256)" : "CS2 (P-256/AES-128)"
+            smStatus = "Active: \(suiteName)"
+
+            // VERIFY pairing code under SM
+            status = "Verifying pairing code..."
+            let verifyResp = try await card.verifyPairingCode(pairingCode)
+            if !verifyResp.success {
+                if verifyResp.sw1 == 0x63 {
+                    let retries = verifyResp.sw2 & 0x0F
+                    throw PIVError.commandFailed(
+                        sw: verifyResp.sw,
+                        description: "Pairing code rejected — \(retries) retries remaining"
+                    )
+                } else if verifyResp.sw == SW.authMethodBlocked.rawValue {
+                    throw PIVError.commandFailed(
+                        sw: verifyResp.sw,
+                        description: "Pairing code blocked (0 retries remaining)"
+                    )
+                } else {
+                    throw PIVError.commandFailed(
+                        sw: verifyResp.sw,
+                        description: "VERIFY pairing code failed"
+                    )
+                }
+            }
+
+            // VCI is now active — re-read all data objects
+            certificates = []
+            chuid = nil
+            challengeResult = nil
+            vciAvailable = false
+
+            // Read Card Auth cert (9E)
+            status = "Reading Card Authentication certificate (VCI)..."
+            let cardAuthResp = try await card.getCertificate(DataObjects.X509_CARD_AUTH)
+            if cardAuthResp.success, let cert = cardAuthResp.parsed as? PIVCertificate,
+               var summary = cert.summarize() {
+                summary.chainValidation = await validateCert(cert.certDER)
+                let sig = await verifySignature(cert.certDER)
+                summary.signatureVerified = sig.verified
+                summary.issuerName = sig.issuer
+                summary.smProtected = true
+                certificates.append((name: "Card Authentication (9E)", summary: summary))
+
+                status = "Authenticating card..."
+                challengeResult = try? await ChallengeResponse.performChallengeResponse(
+                    card: card, certDER: cert.certDER
+                )
+            }
+
+            // Read CHUID
+            status = "Reading CHUID (VCI)..."
+            let chuidResp = try await card.getCHUID()
+            if chuidResp.success, let parsed = chuidResp.parsed as? PIVChuid {
+                chuid = parsed
+            }
+
+            // Read PIV Auth cert (9A) — should now succeed under VCI
+            status = "Reading PIV Authentication certificate (VCI)..."
+            let pivAuthResp = try await card.getCertificate(DataObjects.X509_PIV_AUTH)
+            if pivAuthResp.success, let cert = pivAuthResp.parsed as? PIVCertificate,
+               var summary = cert.summarize() {
+                summary.chainValidation = await validateCert(cert.certDER)
+                let sig = await verifySignature(cert.certDER)
+                summary.signatureVerified = sig.verified
+                summary.issuerName = sig.issuer
+                summary.smProtected = true
+                certificates.append((name: "PIV Authentication (9A)", summary: summary))
+            }
+
+            // Read Digital Signature cert (9C)
+            status = "Reading Digital Signature certificate (VCI)..."
+            let digSigResp = try await card.getCertificate(DataObjects.X509_DIGITAL_SIG)
+            if digSigResp.success, let cert = digSigResp.parsed as? PIVCertificate,
+               var summary = cert.summarize() {
+                summary.chainValidation = await validateCert(cert.certDER)
+                let sig = await verifySignature(cert.certDER)
+                summary.signatureVerified = sig.verified
+                summary.issuerName = sig.issuer
+                summary.smProtected = true
+                certificates.append((name: "Digital Signature (9C)", summary: summary))
+            }
+
+            // Read Key Management cert (9D)
+            status = "Reading Key Management certificate (VCI)..."
+            let keyMgmtResp = try await card.getCertificate(DataObjects.X509_KEY_MGMT)
+            if keyMgmtResp.success, let cert = keyMgmtResp.parsed as? PIVCertificate,
+               var summary = cert.summarize() {
+                summary.chainValidation = await validateCert(cert.certDER)
+                let sig = await verifySignature(cert.certDER)
+                summary.signatureVerified = sig.verified
+                summary.issuerName = sig.issuer
+                summary.smProtected = true
+                certificates.append((name: "Key Management (9D)", summary: summary))
+            }
+
+            // Done
+            let certCount = certificates.count
+            transport.endSession(message: "VCI done — \(certCount) cert(s) read")
+            status = "VCI complete: \(certCount) certificate(s) read"
+
+        } catch {
+            transport.endSession(error: error.localizedDescription)
+            self.error = error.localizedDescription
+            status = "VCI error"
+        }
+    }
+
+    // MARK: - Helpers
+
     private func validateCert(_ certDER: Data) async -> ValidationResult {
         guard let certs = await FPKICertStore.shared.getCertificates() else {
             return .notEvaluated
@@ -156,24 +328,17 @@ class CardReaderViewModel: ObservableObject {
         )
     }
 
-    /// Verify the certificate's signature against known intermediate/root certs.
     private func verifySignature(_ certDER: Data) async -> (verified: Bool, issuer: String?) {
-        // Log the cert's issuer field for debugging
         if let certIssuer = PIVCrypto.getCertIssuerName(certDER) {
             print("Cert issuer: \(certIssuer)")
         }
 
-        // Build candidate issuers: intermediates + root
         var candidates = [Data]()
         if let certs = await FPKICertStore.shared.getCertificates() {
             candidates.append(contentsOf: certs.intermediates)
             candidates.append(certs.root)
-            print("Signature verification: \(candidates.count) candidate issuers loaded")
-        } else {
-            print("Signature verification: NO candidate issuers (FPKI certs not loaded)")
         }
 
-        // Also check if self-signed
         if PIVCrypto.isSelfSigned(certDER: certDER) {
             return (true, "Self-signed")
         }
@@ -193,6 +358,7 @@ class CardReaderViewModel: ObservableObject {
 
 struct CardReaderView: View {
     @StateObject private var viewModel = CardReaderViewModel()
+    @State private var showSettings = false
 
     var body: some View {
         List {
@@ -219,6 +385,9 @@ struct CardReaderView: View {
                     if !viewModel.smCipherSuites.isEmpty {
                         LabeledContent("SM Suites",
                                        value: viewModel.smCipherSuites.joined(separator: ", "))
+                    }
+                    if let sm = viewModel.smStatus {
+                        LabeledContent("Secure Messaging", value: sm)
                     }
                 }
             }
@@ -276,15 +445,37 @@ struct CardReaderView: View {
                                 summary: item.summary
                             )
                         } label: {
-                            VStack(alignment: .leading) {
-                                Text(item.name)
-                                    .font(.headline)
-                                Text(item.summary.subject)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
+                            HStack {
+                                VStack(alignment: .leading) {
+                                    Text(item.name)
+                                        .font(.headline)
+                                    Text(item.summary.subject)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                Spacer()
+                                if item.summary.smProtected {
+                                    Image(systemName: "lock.fill")
+                                        .font(.caption)
+                                        .foregroundColor(.green)
+                                }
                             }
                         }
                     }
+                }
+            }
+
+            // VCI Entry
+            if viewModel.vciAvailable {
+                Section {
+                    Button {
+                        viewModel.showVCIEntry = true
+                    } label: {
+                        Label("Enter VCI Pairing Code", systemImage: "key.fill")
+                    }
+                    .disabled(viewModel.isReading)
+                } footer: {
+                    Text("Some data objects require VCI (Virtual Contact Interface). Enter the 8-digit pairing code to establish VCI and read protected objects over NFC.")
                 }
             }
 
@@ -294,6 +485,24 @@ struct CardReaderView: View {
                     Text(tlv)
                         .font(.system(.caption, design: .monospaced))
                 }
+            }
+        }
+        .sheet(isPresented: $viewModel.showVCIEntry) {
+            PINEntryView(
+                title: "VCI Pairing Code",
+                prompt: "Enter 8-digit pairing code"
+            ) { code in
+                viewModel.readCardWithVCI(pairingCode: code)
+            }
+        }
+        .sheet(isPresented: $showSettings) {
+            NavigationStack {
+                SettingsView()
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Done") { showSettings = false }
+                        }
+                    }
             }
         }
         .safeAreaInset(edge: .top) {
@@ -306,6 +515,12 @@ struct CardReaderView: View {
                 Text("PIV Reader")
                     .font(.title2.bold())
                 Spacer()
+                Button {
+                    showSettings = true
+                } label: {
+                    Image(systemName: "gearshape")
+                        .font(.title3)
+                }
                 Menu {
                     Button {
                         viewModel.startReading(useUSB: false)
