@@ -30,20 +30,58 @@ class USBTransport: CardTransport {
             throw PIVError.nfcSessionFailed("No USB smart card readers found")
         }
 
-        // Find matching slot
-        let targetName: String
-        if let readerName {
-            guard let match = slots.first(where: { $0.localizedCaseInsensitiveContains(readerName) }) else {
-                throw PIVError.nfcSessionFailed(
-                    "Reader '\(readerName)' not found. Available: \(slots)")
+        // Find a slot with a card present, or match by name
+        var targetName: String?
+
+        // First pass: find a slot that already has a card
+        for name in slots {
+            if let slot = await mgr.getSlot(withName: name),
+               slot.state == .validCard {
+                print("Found card in slot: \(name)")
+                targetName = name
+                break
             }
-            targetName = match
-        } else {
-            targetName = slots[0]
+        }
+
+        // Second pass: match by name if specified, or pick first
+        if targetName == nil {
+            if let readerName {
+                targetName = slots.first(where: { $0.localizedCaseInsensitiveContains(readerName) })
+            }
+            // Default to first slot
+            if targetName == nil { targetName = slots[0] }
+        }
+
+        guard let targetName else {
+            throw PIVError.nfcSessionFailed("No suitable reader found. Available: \(slots)")
         }
 
         guard let slot = await mgr.getSlot(withName: targetName) else {
             throw PIVError.nfcSessionFailed("Failed to get slot '\(targetName)'")
+        }
+
+        // If no card present, wait for one (up to 30 seconds)
+        if slot.makeSmartCard() == nil {
+            print("Waiting for card on '\(targetName)'...")
+            let gotCard = await withCheckedContinuation { (cont: CheckedContinuation<Bool, Never>) in
+                var observation: NSKeyValueObservation?
+                observation = slot.observe(\.state, options: [.new]) { slot, _ in
+                    if slot.state == .validCard {
+                        observation?.invalidate()
+                        cont.resume(returning: true)
+                    }
+                }
+
+                // Timeout after 30 seconds
+                DispatchQueue.global().asyncAfter(deadline: .now() + 30) {
+                    observation?.invalidate()
+                    cont.resume(returning: false)
+                }
+            }
+
+            if !gotCard {
+                throw PIVError.nfcSessionFailed("Timed out waiting for card on '\(targetName)'")
+            }
         }
 
         guard let smartCard = slot.makeSmartCard() else {
