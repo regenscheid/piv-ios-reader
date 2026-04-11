@@ -15,6 +15,21 @@ struct SettingsView: View {
 
             Section {
                 NavigationLink {
+                    CardRegistrationView(registry: CardRegistry.shared)
+                } label: {
+                    HStack {
+                        Text("Registered Cards")
+                        Spacer()
+                        Text("\(CardRegistry.shared.cards.count)")
+                            .foregroundColor(.secondary)
+                    }
+                }
+            } footer: {
+                Text("Register PIV cards to store identity information for quick lookup during card reads.")
+            }
+
+            Section {
+                NavigationLink {
                     TrustStoreView(trustStore: trustStore)
                 } label: {
                     HStack {

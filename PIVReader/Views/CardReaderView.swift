@@ -17,6 +17,7 @@ class CardReaderViewModel: ObservableObject {
     @Published var tlvDump: String? = nil
     @Published var isReading = false
     @Published var error: String? = nil
+    @Published var registeredCardInfo: RegisteredCard? = nil
 
     /// True if VCI entry should be offered (card supports SM and some objects need VCI).
     @Published var vciAvailable = false
@@ -36,6 +37,7 @@ class CardReaderViewModel: ObservableObject {
         smStatus = nil
         tlvDump = nil
         vciAvailable = false
+        registeredCardInfo = nil
 
         Task {
             await readCard(useUSB: useUSB)
@@ -128,6 +130,11 @@ class CardReaderViewModel: ObservableObject {
                 challengeResult = try? await ChallengeResponse.performChallengeResponse(
                     card: card, certDER: cert.certDER
                 )
+
+                // Look up registered card by UUID from cert SAN
+                if let uuid = PIVCrypto.extractUUIDFromCertSAN(cert.certDER) {
+                    registeredCardInfo = CardRegistry.shared.lookup(uuid: uuid)
+                }
             }
 
             // Read CHUID (always accessible)
@@ -401,6 +408,19 @@ struct CardReaderView: View {
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
+                    }
+                }
+            }
+
+            // Registered Card Info
+            if let registered = viewModel.registeredCardInfo {
+                Section("Registered Cardholder") {
+                    LabeledContent("Name", value: registered.subjectName)
+                    if let org = registered.organization {
+                        LabeledContent("Organization", value: org)
+                    }
+                    if !registered.organizationalUnits.isEmpty {
+                        LabeledContent("Unit(s)", value: registered.organizationalUnits.joined(separator: ", "))
                     }
                 }
             }

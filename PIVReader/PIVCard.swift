@@ -119,6 +119,27 @@ class PIVCard {
         return resp
     }
 
+    // MARK: - Discovery Object
+
+    /// Read and parse the Discovery Object to determine VCI support.
+    ///
+    /// Returns VCI capability flags, or nil if the Discovery Object is absent or unparseable.
+    func getDiscovery() async throws -> (supportsVCI: Bool, requiresPairingCode: Bool)? {
+        let resp = try await getData(DataObjects.DISCOVERY)
+        guard resp.success, !resp.data.isEmpty else { return nil }
+
+        let tlvs = parseTLV(resp.data)
+        // Discovery Object is tag 7E containing tag 5F2F (PIN Usage Policy)
+        guard let outer = findTag(tlvs, 0x7E) else { return nil }
+        guard let pup = findTagRecursive(outer.children(), 0x5F2F) else { return nil }
+        guard !pup.value.isEmpty else { return nil }
+
+        let byte1 = pup.value[0]
+        let supportsVCI = (byte1 & 0x08) != 0
+        let requiresPairingCode = (byte1 & 0x04) == 0  // bit clear = required
+        return (supportsVCI, requiresPairingCode)
+    }
+
     // MARK: - GENERAL AUTHENTICATE
 
     /// GENERAL AUTHENTICATE.

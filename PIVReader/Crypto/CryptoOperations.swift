@@ -220,6 +220,123 @@ struct PIVCrypto {
         }
     }
 
+    /// Parse structured subject DN fields from a DER certificate.
+    static func parseCertSubjectDN(_ certDER: Data) -> (cn: String?, o: String?, ous: [String]) {
+        do {
+            let cert = try X509.Certificate(derEncoded: Array(certDER))
+            var cn: String?
+            var o: String?
+            var ous: [String] = []
+
+            for rdn in cert.subject {
+                for attr in rdn {
+                    switch attr.type {
+                    case .RDNAttributeType.commonName:
+                        cn = String(describing: attr.value)
+                    case .RDNAttributeType.organizationName:
+                        o = String(describing: attr.value)
+                    case .RDNAttributeType.organizationalUnitName:
+                        ous.append(String(describing: attr.value))
+                    default:
+                        break
+                    }
+                }
+            }
+            return (cn, o, ous)
+        } catch {
+            return (nil, nil, [])
+        }
+    }
+
+    /// Extract the UUID from a certificate's SubjectAlternativeName extension.
+    ///
+    /// PIV certificates encode the card UUID as an OtherName entry with
+    /// OID 1.3.6.1.1.16.4 (RFC 4122 UUID), containing a DER OCTET STRING
+    /// of 16 raw UUID bytes.
+    static func extractUUIDFromCertSAN(_ certDER: Data) -> String? {
+        let uuidOID = ASN1ObjectIdentifier(arrayLiteral: 1, 3, 6, 1, 1, 16, 4)
+
+        do {
+            let cert = try X509.Certificate(derEncoded: Array(certDER))
+            guard let sans = try? cert.extensions.subjectAlternativeNames else { return nil }
+
+            for name in sans {
+                // Check for URI format: urn:uuid:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+                if case .uniformResourceIdentifier(let uri) = name {
+                    let prefix = "urn:uuid:"
+                    if uri.lowercased().hasPrefix(prefix) {
+                        let uuid = String(uri.dropFirst(prefix.count))
+                        print("[UUID] Extracted from URI: \(uuid)")
+                        return uuid
+                    }
+                }
+
+                // Check for OtherName with UUID OID (1.3.6.1.1.16.4)
+                if case .otherName(let otherName) = name {
+                    guard otherName.typeID == uuidOID else { continue }
+                    guard let asn1Value = otherName.value else { continue }
+                    var serializer = DER.Serializer()
+                    try serializer.serialize(asn1Value)
+                    let valueBytes = serializer.serializedBytes
+                    if let uuid = extractUUIDBytes(from: valueBytes) {
+                        return formatUUID(uuid)
+                    }
+                }
+            }
+            return nil
+        } catch {
+            return nil
+        }
+    }
+
+    /// Extract 16-byte UUID from DER-encoded value, recursing into constructed tags.
+    ///
+    /// The OtherName value is typically: `[0] EXPLICIT { OCTET STRING (16 bytes) }`.
+    private static func extractUUIDBytes(from der: [UInt8]) -> Data? {
+        var i = 0
+        while i < der.count {
+            let tag = der[i]
+            i += 1
+            guard i < der.count else { return nil }
+            var length = Int(der[i])
+            i += 1
+            if length > 0x80 {
+                let numBytes = length & 0x7F
+                length = 0
+                for _ in 0..<numBytes {
+                    guard i < der.count else { return nil }
+                    length = (length << 8) | Int(der[i])
+                    i += 1
+                }
+            }
+            guard i + length <= der.count else { return nil }
+            if tag == 0x04 && length == 16 {
+                return Data(der[i..<(i + 16)])
+            }
+            // Recurse into constructed tags (bit 5 set) like [0] EXPLICIT (0xA0)
+            if tag & 0x20 != 0 {
+                let inner = Array(der[i..<(i + length)])
+                if let result = extractUUIDBytes(from: inner) {
+                    return result
+                }
+            }
+            i += length
+        }
+        return nil
+    }
+
+    /// Format 16 raw UUID bytes as an RFC 4122 string.
+    private static func formatUUID(_ data: Data) -> String? {
+        guard data.count == 16 else { return nil }
+        let hex = data.map { String(format: "%02x", $0) }.joined()
+        // xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        let i = hex.index(hex.startIndex, offsetBy: 8)
+        let j = hex.index(i, offsetBy: 4)
+        let k = hex.index(j, offsetBy: 4)
+        let l = hex.index(k, offsetBy: 4)
+        return "\(hex[..<i])-\(hex[i..<j])-\(hex[j..<k])-\(hex[k..<l])-\(hex[l...])"
+    }
+
     // MARK: - Certificate Signature Verification
 
     /// Verify a certificate's signature against a set of potential issuer certificates.

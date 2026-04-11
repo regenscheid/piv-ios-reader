@@ -49,6 +49,8 @@
 		F000003A /* ChallengeResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = F100003A /* ChallengeResponse.swift */; };
 		F000003B /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F100003B /* SettingsView.swift */; };
 		F000003C /* TrustStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F100003C /* TrustStore.swift */; };
+		F000003D /* CardRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = F100003D /* CardRegistry.swift */; };
+		F000003E /* CardRegistrationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F100003E /* CardRegistrationView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -93,6 +95,8 @@
 		F100003A /* ChallengeResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChallengeResponse.swift; sourceTree = "<group>"; };
 		F100003B /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		F100003C /* TrustStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrustStore.swift; sourceTree = "<group>"; };
+		F100003D /* CardRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardRegistry.swift; sourceTree = "<group>"; };
+		F100003E /* CardRegistrationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardRegistrationView.swift; sourceTree = "<group>"; };
 		F1000040 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		F1000041 /* PIVReader.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PIVReader.entitlements; sourceTree = "<group>"; };
 		F2000001 /* PIVReader.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PIVReader.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -146,6 +150,7 @@
 				F1000006 /* CertificateDetailView.swift */,
 				F1000007 /* PINEntryView.swift */,
 				F100003B /* SettingsView.swift */,
+				F100003E /* CardRegistrationView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -210,6 +215,7 @@
 				F1000037 /* CertChainValidator.swift */,
 				F100003A /* ChallengeResponse.swift */,
 				F100003C /* TrustStore.swift */,
+				F100003D /* CardRegistry.swift */,
 			);
 			path = Crypto;
 			sourceTree = "<group>";
@@ -347,6 +353,8 @@
 				F000003A /* ChallengeResponse.swift in Sources */,
 				F000003B /* SettingsView.swift in Sources */,
 				F000003C /* TrustStore.swift in Sources */,
+				F000003D /* CardRegistry.swift in Sources */,
+				F000003E /* CardRegistrationView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
