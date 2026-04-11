@@ -100,11 +100,13 @@ struct CardRegistrationFlowView: View {
     @State private var organization: String?
     @State private var organizationalUnits: [String] = []
     @State private var cardAuthFingerprint: String?
+    @State private var pivAuthCertDER: Data?
     @State private var supportsVCI = false
     @State private var requiresPairingCode = false
 
     // User inputs
     @State private var showPairingCodeEntry = false
+    @State private var showUSBPINEntry = false
     @State private var pairingCode: String = ""
     @State private var savePairingCode = true
     @State private var pinToSave: String = ""
@@ -218,11 +220,19 @@ struct CardRegistrationFlowView: View {
                 pinToSave = pin
             }
         }
+        .sheet(isPresented: $showUSBPINEntry) {
+            PINEntryView(
+                title: "PIV PIN",
+                prompt: "Enter PIN to read card data and pairing code"
+            ) { pin in
+                performUSBRegistration(pin: pin)
+            }
+        }
     }
 
     private func startRegistration() {
         if useUSB {
-            performUSBRegistration()
+            showUSBPINEntry = true
         } else {
             showPairingCodeEntry = true
         }
@@ -230,16 +240,17 @@ struct CardRegistrationFlowView: View {
 
     // MARK: - USB Registration
 
-    private func performUSBRegistration() {
+    private func performUSBRegistration(pin: String) {
         isReading = true
         error = nil
+        pinToSave = pin
         Task {
-            await doUSBRegistration()
+            await doUSBRegistration(pin: pin)
             isReading = false
         }
     }
 
-    private func doUSBRegistration() async {
+    private func doUSBRegistration(pin: String) async {
         let usb = USBTransport()
         do {
             status = "Connecting to USB reader..."
@@ -252,7 +263,45 @@ struct CardRegistrationFlowView: View {
                 throw PIVError.commandFailed(sw: selectResp.sw, description: "SELECT failed")
             }
 
+            // VERIFY PIN (needed to read pairing code container)
+            status = "Verifying PIN..."
+            let pinResp = try await card.verify(pin: pin)
+            guard pinResp.success else {
+                if pinResp.sw1 == 0x63 {
+                    let retries = pinResp.sw2 & 0x0F
+                    throw PIVError.commandFailed(sw: pinResp.sw, description: "Wrong PIN — \(retries) retries remaining")
+                }
+                throw PIVError.commandFailed(sw: pinResp.sw, description: "PIN verification failed")
+            }
+
             try await readCardData(card: card, vciPairingCode: nil)
+
+            // Read Pairing Code Reference Data Container (requires PIN)
+            if supportsVCI {
+                status = "Reading pairing code..."
+                let pcResp = try await card.getData(DataObjects.PAIRING_CODE_REF)
+                if pcResp.success, !pcResp.data.isEmpty {
+                    // Parse: outer tag 53, inner contains the pairing code bytes
+                    let tlvs = parseTLV(pcResp.data)
+                    if let container = findTag(tlvs, 0x53) {
+                        // The pairing code is typically tag 99 inside the container
+                        let innerTLVs = container.children()
+                        if let codeTLV = findTag(innerTLVs, 0x99) {
+                            if let code = String(data: codeTLV.value, encoding: .utf8) {
+                                pairingCode = code
+                                savePairingCode = true
+                                print("[REG] Read pairing code from card: \(code.count) chars")
+                            }
+                        } else if let code = String(data: container.value, encoding: .ascii) {
+                            // Fallback: try the whole container value as ASCII
+                            pairingCode = code.trimmingCharacters(in: .controlCharacters)
+                            savePairingCode = true
+                            print("[REG] Read pairing code (raw) from card: \(pairingCode.count) chars")
+                        }
+                    }
+                }
+            }
+
             usb.disconnect()
         } catch {
             usb.disconnect()
@@ -327,6 +376,7 @@ struct CardRegistrationFlowView: View {
         let pivAuthResp = try await card.getCertificate(DataObjects.X509_PIV_AUTH)
         print("[REG] PIV Auth (9A) SW: \(pivAuthResp.swHex), data: \(pivAuthResp.data.count) bytes")
         if pivAuthResp.success, let cert = pivAuthResp.parsed as? PIVCertificate {
+            pivAuthCertDER = cert.certDER
             let dn = PIVCrypto.parseCertSubjectDN(cert.certDER)
             subjectName = dn.cn ?? "Unknown"
             organization = dn.o
@@ -373,6 +423,7 @@ struct CardRegistrationFlowView: View {
             organization: organization,
             organizationalUnits: organizationalUnits,
             cardAuthFingerprint: cardAuthFingerprint,
+            pivAuthCertBase64: pivAuthCertDER?.base64EncodedString(),
             supportsVCI: supportsVCI,
             requiresPairingCode: requiresPairingCode,
             pairingCode: savePairingCode ? pairingCode : nil,

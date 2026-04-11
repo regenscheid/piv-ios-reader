@@ -44,6 +44,9 @@ struct SettingsView: View {
             }
         }
         .navigationTitle("Settings")
+        .task {
+            await trustStore.loadIfNeeded()
+        }
     }
 }
 

@@ -3,10 +3,12 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2D1574132F8A828A002EFC03 /* CryptoTokenKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D1574122F8A828A002EFC03 /* CryptoTokenKit.framework */; };
+		2D15741E2F8A828A002EFC03 /* PIVTokenExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 2D1574102F8A828A002EFC03 /* PIVTokenExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		F0000001 /* PIVReaderApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001 /* PIVReaderApp.swift */; };
 		F0000002 /* PIVError.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000002 /* PIVError.swift */; };
 		F0000003 /* PIVCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000003 /* PIVCard.swift */; };
@@ -51,9 +53,36 @@
 		F000003C /* TrustStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F100003C /* TrustStore.swift */; };
 		F000003D /* CardRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = F100003D /* CardRegistry.swift */; };
 		F000003E /* CardRegistrationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F100003E /* CardRegistrationView.swift */; };
+		F000003F /* TokenRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = F100003F /* TokenRequestHandler.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		2D15741C2F8A828A002EFC03 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F6000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 2D15740F2F8A828A002EFC03;
+			remoteInfo = PIVTokenExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		2D15741F2F8A828A002EFC03 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				2D15741E2F8A828A002EFC03 /* PIVTokenExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		2D1574102F8A828A002EFC03 /* PIVTokenExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PIVTokenExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		2D1574122F8A828A002EFC03 /* CryptoTokenKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CryptoTokenKit.framework; path = System/Library/Frameworks/CryptoTokenKit.framework; sourceTree = SDKROOT; };
 		F1000001 /* PIVReaderApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PIVReaderApp.swift; sourceTree = "<group>"; };
 		F1000002 /* PIVError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PIVError.swift; sourceTree = "<group>"; };
 		F1000003 /* PIVCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PIVCard.swift; sourceTree = "<group>"; };
@@ -97,12 +126,35 @@
 		F100003C /* TrustStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrustStore.swift; sourceTree = "<group>"; };
 		F100003D /* CardRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardRegistry.swift; sourceTree = "<group>"; };
 		F100003E /* CardRegistrationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardRegistrationView.swift; sourceTree = "<group>"; };
+		F100003F /* TokenRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TokenRequestHandler.swift; sourceTree = "<group>"; };
 		F1000040 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		F1000041 /* PIVReader.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PIVReader.entitlements; sourceTree = "<group>"; };
 		F2000001 /* PIVReader.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PIVReader.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		2D1574222F8A828A002EFC03 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 2D15740F2F8A828A002EFC03 /* PIVTokenExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		2D1574142F8A828A002EFC03 /* PIVTokenExtension */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (2D1574222F8A828A002EFC03 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = PIVTokenExtension; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
+
 /* Begin PBXFrameworksBuildPhase section */
+		2D15740D2F8A828A002EFC03 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2D1574132F8A828A002EFC03 /* CryptoTokenKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F2100001 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -114,10 +166,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		2D1574112F8A828A002EFC03 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				2D1574122F8A828A002EFC03 /* CryptoTokenKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		F4000001 = {
 			isa = PBXGroup;
 			children = (
 				F4000002 /* PIVReader */,
+				2D1574142F8A828A002EFC03 /* PIVTokenExtension */,
+				2D1574112F8A828A002EFC03 /* Frameworks */,
 				F4000010 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -138,6 +200,7 @@
 				F4000007 /* Commands */,
 				F4000008 /* Crypto */,
 				F4000009 /* Transport */,
+				F100003F /* TokenRequestHandler.swift */,
 			);
 			path = PIVReader;
 			sourceTree = "<group>";
@@ -234,6 +297,7 @@
 			isa = PBXGroup;
 			children = (
 				F2000001 /* PIVReader.app */,
+				2D1574102F8A828A002EFC03 /* PIVTokenExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -241,6 +305,28 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		2D15740F2F8A828A002EFC03 /* PIVTokenExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2D1574232F8A828A002EFC03 /* Build configuration list for PBXNativeTarget "PIVTokenExtension" */;
+			buildPhases = (
+				2D15740C2F8A828A002EFC03 /* Sources */,
+				2D15740D2F8A828A002EFC03 /* Frameworks */,
+				2D15740E2F8A828A002EFC03 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				2D1574142F8A828A002EFC03 /* PIVTokenExtension */,
+			);
+			name = PIVTokenExtension;
+			packageProductDependencies = (
+			);
+			productName = PIVTokenExtension;
+			productReference = 2D1574102F8A828A002EFC03 /* PIVTokenExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		F5000001 /* PIVReader */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = F7000003 /* Build configuration list for PBXNativeTarget "PIVReader" */;
@@ -248,10 +334,12 @@
 				F2200001 /* Sources */,
 				F2100001 /* Frameworks */,
 				F2300001 /* Resources */,
+				2D15741F2F8A828A002EFC03 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				2D15741D2F8A828A002EFC03 /* PBXTargetDependency */,
 			);
 			name = PIVReader;
 			packageProductDependencies = (
@@ -268,9 +356,12 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1600;
+				LastSwiftUpdateCheck = 2640;
 				LastUpgradeCheck = 2640;
 				TargetAttributes = {
+					2D15740F2F8A828A002EFC03 = {
+						CreatedOnToolsVersion = 26.4;
+					};
 					F5000001 = {
 						CreatedOnToolsVersion = 16.0;
 					};
@@ -293,11 +384,19 @@
 			projectRoot = "";
 			targets = (
 				F5000001 /* PIVReader */,
+				2D15740F2F8A828A002EFC03 /* PIVTokenExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		2D15740E2F8A828A002EFC03 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F2300001 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -309,6 +408,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		2D15740C2F8A828A002EFC03 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F2200001 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -355,12 +461,99 @@
 				F000003C /* TrustStore.swift in Sources */,
 				F000003D /* CardRegistry.swift in Sources */,
 				F000003E /* CardRegistrationView.swift in Sources */,
+				F000003F /* TokenRequestHandler.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		2D15741D2F8A828A002EFC03 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 2D15740F2F8A828A002EFC03 /* PIVTokenExtension */;
+			targetProxy = 2D15741C2F8A828A002EFC03 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		2D1574202F8A828A002EFC03 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_ENTITLEMENTS = PIVTokenExtension/PIVTokenExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PIVTokenExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = PIVTokenExtension;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 0.3;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.pivforge.PIVReader.PIVTokenExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		2D1574212F8A828A002EFC03 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_ENTITLEMENTS = PIVTokenExtension/PIVTokenExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PIVTokenExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = PIVTokenExtension;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 0.3;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.pivforge.PIVReader.PIVTokenExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		F8000001 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -470,8 +663,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = PIVReader/PIVReader.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = ANAMY6K3XJ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = PIVReader/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "PIV Reader";
@@ -483,9 +678,10 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.1;
+				MARKETING_VERSION = 0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.pivforge.PIVReader;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -496,8 +692,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = PIVReader/PIVReader.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = ANAMY6K3XJ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = PIVReader/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "PIV Reader";
@@ -509,9 +707,10 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.1;
+				MARKETING_VERSION = 0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.pivforge.PIVReader;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -520,6 +719,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		2D1574232F8A828A002EFC03 /* Build configuration list for PBXNativeTarget "PIVTokenExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2D1574202F8A828A002EFC03 /* Debug */,
+				2D1574212F8A828A002EFC03 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		F7000001 /* Build configuration list for PBXProject "PIVReader" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

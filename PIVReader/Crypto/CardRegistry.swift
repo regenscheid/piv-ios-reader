@@ -1,6 +1,7 @@
 import Foundation
 import Security
 import LocalAuthentication
+import CryptoTokenKit
 
 /// A registered PIV card in the database.
 struct RegisteredCard: Identifiable, Codable {
@@ -10,10 +11,14 @@ struct RegisteredCard: Identifiable, Codable {
     let organization: String?       // O from PIV Auth cert
     let organizationalUnits: [String] // OU(s) from PIV Auth cert
     let cardAuthFingerprint: String? // SHA-256 of card auth cert DER
+    let pivAuthCertBase64: String?  // DER cert for CTK registration
     let supportsVCI: Bool
     let requiresPairingCode: Bool
     var pairingCode: String?        // plain storage (not a secret)
     var hasPIN: Bool                // true if PIN stored in keychain
+
+    /// CTK object ID used to link the certificate to the token extension.
+    var ctkObjectID: String { "\(id)-9A" }
 }
 
 /// Manages registered PIV cards with JSON persistence and keychain PIN storage.
@@ -22,7 +27,7 @@ class CardRegistry: ObservableObject {
 
     @Published private(set) var cards: [RegisteredCard] = []
 
-    private static let keychainService = "com.pivreader.card-secrets"
+    private static let keychainService = "com.pivforge.PIVReader.card-secrets"
 
     private let storeURL: URL = {
         let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
@@ -47,14 +52,19 @@ class CardRegistry: ObservableObject {
 
     func register(_ card: RegisteredCard) {
         if let idx = cards.firstIndex(where: { $0.id == card.id }) {
+            removeCertificateFromCTK(objectID: cards[idx].ctkObjectID)
             cards[idx] = card
         } else {
             cards.append(card)
         }
+        registerCertificateWithCTK(card)
         saveToDisk()
     }
 
     func delete(_ id: String) {
+        if let card = cards.first(where: { $0.id == id }) {
+            removeCertificateFromCTK(objectID: card.ctkObjectID)
+        }
         cards.removeAll { $0.id == id }
         deletePIN(forCardID: id)
         saveToDisk()
@@ -133,13 +143,73 @@ class CardRegistry: ObservableObject {
         }
     }
 
+    // MARK: - CryptoTokenKit Registration
+
+    /// Register the PIV Auth certificate with CryptoTokenKit so it appears
+    /// in Safari's client certificate picker.
+    private func registerCertificateWithCTK(_ card: RegisteredCard) {
+        do {
+            guard let certBase64 = card.pivAuthCertBase64,
+                  let certDER = Data(base64Encoded: certBase64),
+                  let secCert = SecCertificateCreateWithData(nil, certDER as CFData) else {
+                print("[CTK] No PIV Auth cert to register")
+                return
+            }
+
+            let objectID = card.ctkObjectID
+            print("[CTK] Registering cert, objectID: \(objectID)")
+
+            let configs = TKTokenDriver.Configuration.driverConfigurations
+            print("[CTK] Driver configurations count: \(configs.count)")
+            guard let driverConfig = configs.first?.value else {
+                print("[CTK] No driver configuration available — is the token extension installed?")
+                return
+            }
+
+            guard let keychainCert = TKTokenKeychainCertificate(certificate: secCert, objectID: objectID) else {
+                print("[CTK] Failed to create TKTokenKeychainCertificate")
+                return
+            }
+
+            guard let keychainKey = TKTokenKeychainKey(certificate: secCert, objectID: objectID) else {
+                print("[CTK] Failed to create TKTokenKeychainKey")
+                return
+            }
+            keychainKey.label = objectID
+            keychainKey.canSign = true
+            keychainKey.canDecrypt = true
+            keychainKey.canPerformKeyExchange = false
+            keychainKey.isSuitableForLogin = true
+
+            let tokenConfig = driverConfig.addTokenConfiguration(for: objectID)
+            tokenConfig.keychainItems.append(contentsOf: [keychainCert, keychainKey])
+            print("[CTK] Registered certificate for \(card.subjectName) (objectID: \(objectID))")
+        } catch {
+            print("[CTK] Registration failed: \(error)")
+        }
+    }
+
+    /// Remove a certificate from CryptoTokenKit.
+    private func removeCertificateFromCTK(objectID: String) {
+        do {
+            let configs = TKTokenDriver.Configuration.driverConfigurations
+            guard let driverConfig = configs.first?.value else { return }
+            driverConfig.removeTokenConfiguration(for: objectID)
+            print("[CTK] Removed certificate (objectID: \(objectID))")
+        } catch {
+            print("[CTK] Removal failed: \(error)")
+        }
+    }
+
     // MARK: - Persistence
 
     private func loadFromDisk() {
         guard FileManager.default.fileExists(atPath: storeURL.path) else { return }
         do {
             let data = try Data(contentsOf: storeURL)
-            cards = try JSONDecoder().decode([RegisteredCard].self, from: data)
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            cards = try decoder.decode([RegisteredCard].self, from: data)
         } catch {
             print("CardRegistry: Failed to load: \(error)")
         }

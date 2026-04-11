@@ -65,17 +65,27 @@ class USBTransport: CardTransport {
             print("Waiting for card on '\(targetName)'...")
             let gotCard = await withCheckedContinuation { (cont: CheckedContinuation<Bool, Never>) in
                 var observation: NSKeyValueObservation?
+                var resumed = false
+                let lock = NSLock()
+
+                func safeResume(_ value: Bool) {
+                    lock.lock()
+                    defer { lock.unlock() }
+                    guard !resumed else { return }
+                    resumed = true
+                    observation?.invalidate()
+                    cont.resume(returning: value)
+                }
+
                 observation = slot.observe(\.state, options: [.new]) { slot, _ in
                     if slot.state == .validCard {
-                        observation?.invalidate()
-                        cont.resume(returning: true)
+                        safeResume(true)
                     }
                 }
 
                 // Timeout after 30 seconds
                 DispatchQueue.global().asyncAfter(deadline: .now() + 30) {
-                    observation?.invalidate()
-                    cont.resume(returning: false)
+                    safeResume(false)
                 }
             }
 
