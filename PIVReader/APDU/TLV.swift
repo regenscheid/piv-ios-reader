@@ -33,7 +33,8 @@ struct TLV {
         let header = "\(prefix)[\(tagHex)]\(nameStr)  len=\(length)"
 
         if isConstructed(tag) && !value.isEmpty {
-            if let kids = try? children(), !kids.isEmpty {
+            let kids = children()
+            if !kids.isEmpty {
                 let childLines = kids.map { $0.display(indent: indent + 1) }.joined(separator: "\n")
                 return "\(header)\n\(childLines)"
             }
@@ -51,7 +52,8 @@ struct TLV {
 
 extension TLV: CustomStringConvertible {
     var description: String {
-        if isConstructed(tag), let kids = try? children() {
+        let kids = children()
+        if isConstructed(tag), !kids.isEmpty {
             return "TLV(tag=0x\(tagHex), \(kids.count) children)"
         }
         return "TLV(tag=0x\(tagHex), len=\(length))"

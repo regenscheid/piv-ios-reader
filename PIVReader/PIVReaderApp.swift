@@ -5,7 +5,6 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         // Set notification delegate early so cold-launch notifications are captured
         UNUserNotificationCenter.current().delegate = TokenRequestHandler.shared
-        print("[APP] didFinishLaunching, notification delegate set")
         return true
     }
 }

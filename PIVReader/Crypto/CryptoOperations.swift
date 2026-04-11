@@ -265,9 +265,7 @@ struct PIVCrypto {
                 if case .uniformResourceIdentifier(let uri) = name {
                     let prefix = "urn:uuid:"
                     if uri.lowercased().hasPrefix(prefix) {
-                        let uuid = String(uri.dropFirst(prefix.count))
-                        print("[UUID] Extracted from URI: \(uuid)")
-                        return uuid
+                        return String(uri.dropFirst(prefix.count))
                     }
                 }
 
@@ -459,7 +457,7 @@ struct PIVCrypto {
                 // Each child is a DER-encoded Certificate
                 for certNode in certNodes {
                     var serializer = DER.Serializer()
-                    try serializer.serialize(certNode)
+                    serializer.serialize(certNode)
                     certs.append(Data(serializer.serializedBytes))
                 }
                 break

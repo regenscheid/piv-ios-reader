@@ -290,14 +290,12 @@ struct CardRegistrationFlowView: View {
                             if let code = String(data: codeTLV.value, encoding: .utf8) {
                                 pairingCode = code
                                 savePairingCode = true
-                                print("[REG] Read pairing code from card: \(code.count) chars")
-                            }
+                                    }
                         } else if let code = String(data: container.value, encoding: .ascii) {
                             // Fallback: try the whole container value as ASCII
                             pairingCode = code.trimmingCharacters(in: .controlCharacters)
                             savePairingCode = true
-                            print("[REG] Read pairing code (raw) from card: \(pairingCode.count) chars")
-                        }
+                            }
                     }
                 }
             }
@@ -374,7 +372,6 @@ struct CardRegistrationFlowView: View {
         // PIV Auth cert (9A) — for subject name + UUID
         status = "Reading PIV Authentication certificate..."
         let pivAuthResp = try await card.getCertificate(DataObjects.X509_PIV_AUTH)
-        print("[REG] PIV Auth (9A) SW: \(pivAuthResp.swHex), data: \(pivAuthResp.data.count) bytes")
         if pivAuthResp.success, let cert = pivAuthResp.parsed as? PIVCertificate {
             pivAuthCertDER = cert.certDER
             let dn = PIVCrypto.parseCertSubjectDN(cert.certDER)
@@ -390,7 +387,6 @@ struct CardRegistrationFlowView: View {
         // Card Auth cert (9E) — for fingerprint + UUID fallback
         status = "Reading Card Authentication certificate..."
         let cardAuthResp = try await card.getCertificate(DataObjects.X509_CARD_AUTH)
-        print("[REG] Card Auth (9E) SW: \(cardAuthResp.swHex), data: \(cardAuthResp.data.count) bytes")
         if cardAuthResp.success, let cert = cardAuthResp.parsed as? PIVCertificate {
             cardAuthFingerprint = sha256Hex(cert.certDER)
 

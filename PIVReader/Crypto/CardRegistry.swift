@@ -113,12 +113,15 @@ class CardRegistry: ObservableObject {
 
     /// Read PIN from keychain. Triggers biometric prompt.
     func readPIN(forCardID cardID: String) -> String? {
+        let context = LAContext()
+        context.localizedReason = "Authenticate to access PIV PIN"
+
         let query: [CFString: Any] = [
             kSecClass: kSecClassGenericPassword,
             kSecAttrService: Self.keychainService,
             kSecAttrAccount: "\(cardID)-pin",
             kSecReturnData: true,
-            kSecUseOperationPrompt: "Authenticate to access PIV PIN",
+            kSecUseAuthenticationContext: context,
         ]
 
         var result: AnyObject?
@@ -148,57 +151,39 @@ class CardRegistry: ObservableObject {
     /// Register the PIV Auth certificate with CryptoTokenKit so it appears
     /// in Safari's client certificate picker.
     private func registerCertificateWithCTK(_ card: RegisteredCard) {
-        do {
-            guard let certBase64 = card.pivAuthCertBase64,
-                  let certDER = Data(base64Encoded: certBase64),
-                  let secCert = SecCertificateCreateWithData(nil, certDER as CFData) else {
-                print("[CTK] No PIV Auth cert to register")
-                return
-            }
-
-            let objectID = card.ctkObjectID
-            print("[CTK] Registering cert, objectID: \(objectID)")
-
-            let configs = TKTokenDriver.Configuration.driverConfigurations
-            print("[CTK] Driver configurations count: \(configs.count)")
-            guard let driverConfig = configs.first?.value else {
-                print("[CTK] No driver configuration available — is the token extension installed?")
-                return
-            }
-
-            guard let keychainCert = TKTokenKeychainCertificate(certificate: secCert, objectID: objectID) else {
-                print("[CTK] Failed to create TKTokenKeychainCertificate")
-                return
-            }
-
-            guard let keychainKey = TKTokenKeychainKey(certificate: secCert, objectID: objectID) else {
-                print("[CTK] Failed to create TKTokenKeychainKey")
-                return
-            }
-            keychainKey.label = objectID
-            keychainKey.canSign = true
-            keychainKey.canDecrypt = true
-            keychainKey.canPerformKeyExchange = false
-            keychainKey.isSuitableForLogin = true
-
-            let tokenConfig = driverConfig.addTokenConfiguration(for: objectID)
-            tokenConfig.keychainItems.append(contentsOf: [keychainCert, keychainKey])
-            print("[CTK] Registered certificate for \(card.subjectName) (objectID: \(objectID))")
-        } catch {
-            print("[CTK] Registration failed: \(error)")
+        guard let certBase64 = card.pivAuthCertBase64,
+              let certDER = Data(base64Encoded: certBase64),
+              let secCert = SecCertificateCreateWithData(nil, certDER as CFData) else {
+            return
         }
+
+        let objectID = card.ctkObjectID
+
+        guard let driverConfig = TKTokenDriver.Configuration.driverConfigurations.first?.value else {
+            return
+        }
+
+        guard let keychainCert = TKTokenKeychainCertificate(certificate: secCert, objectID: objectID) else {
+            return
+        }
+
+        guard let keychainKey = TKTokenKeychainKey(certificate: secCert, objectID: objectID) else {
+            return
+        }
+        keychainKey.label = objectID
+        keychainKey.canSign = true
+        keychainKey.canDecrypt = true
+        keychainKey.canPerformKeyExchange = false
+        keychainKey.isSuitableForLogin = true
+
+        let tokenConfig = driverConfig.addTokenConfiguration(for: objectID)
+        tokenConfig.keychainItems.append(contentsOf: [keychainCert, keychainKey])
     }
 
     /// Remove a certificate from CryptoTokenKit.
     private func removeCertificateFromCTK(objectID: String) {
-        do {
-            let configs = TKTokenDriver.Configuration.driverConfigurations
-            guard let driverConfig = configs.first?.value else { return }
-            driverConfig.removeTokenConfiguration(for: objectID)
-            print("[CTK] Removed certificate (objectID: \(objectID))")
-        } catch {
-            print("[CTK] Removal failed: \(error)")
-        }
+        guard let driverConfig = TKTokenDriver.Configuration.driverConfigurations.first?.value else { return }
+        driverConfig.removeTokenConfiguration(for: objectID)
     }
 
     // MARK: - Persistence

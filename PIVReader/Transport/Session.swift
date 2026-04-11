@@ -55,7 +55,6 @@ class Session {
         }
 
         let resp = try await transport.transmit(apdu)
-        let response = PIVResponse(from: resp)
         let cardResp = CardResponse(
             sw1: resp.sw1, sw2: resp.sw2,
             data: resp.data, command: command

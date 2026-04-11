@@ -24,52 +24,52 @@ class TokenRequestHandler: NSObject, ObservableObject {
         super.init()
         // Delegate is set in AppDelegate.didFinishLaunching for cold-launch support
         requestNotificationPermission()
-        log.info("[CTK] TokenRequestHandler initialized")
+        log.debug("[CTK] TokenRequestHandler initialized")
     }
 
     private func requestNotificationPermission() {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, _ in
-            log.info("[CTK] Notifications \(granted ? "granted" : "denied")")
+            log.debug("[CTK] Notifications \(granted ? "granted" : "denied")")
         }
     }
 
     // MARK: - Handle Request
 
     func handleNotification(_ userInfo: [AnyHashable: Any]) {
-        log.info("[CTK] handleNotification called")
+        log.debug("[CTK] handleNotification called")
         pendingUserInfo = userInfo
         hasPendingRequest = true
         requestError = nil
 
         guard let keyObjectID = userInfo["keyObjectID"] as? String else {
             requestError = "Invalid sign request — no keyObjectID"
-            log.info("[CTK] ERROR: no keyObjectID in notification")
+            log.debug("[CTK] ERROR: no keyObjectID in notification")
             return
         }
 
         let cardUUID = String(keyObjectID.dropLast(3))  // Remove "-9A"
         pendingCardUUID = cardUUID
-        log.info("[CTK] Sign request for card UUID: \(cardUUID)")
+        log.debug("[CTK] Sign request for card UUID: \(cardUUID)")
 
         // Try biometric PIN retrieval on a background thread (keychain call blocks)
         if let registered = CardRegistry.shared.lookup(uuid: cardUUID), registered.hasPIN {
             requestStatus = "Authenticating to retrieve PIN..."
-            log.info("[CTK] Card has saved PIN, attempting biometric read")
+            log.debug("[CTK] Card has saved PIN, attempting biometric read")
             Task.detached {
                 let pin = CardRegistry.shared.readPIN(forCardID: cardUUID)
                 await MainActor.run {
                     if let pin {
-                        log.info("[CTK] Biometric PIN read succeeded")
+                        log.debug("[CTK] Biometric PIN read succeeded")
                         Task { await self.performSignRequest(pin: pin) }
                     } else {
-                        log.info("[CTK] Biometric PIN read failed, showing manual entry")
+                        log.debug("[CTK] Biometric PIN read failed, showing manual entry")
                         self.requestStatus = "Enter PIN"
                         self.showPINEntry = true
                     }
                 }
             }
         } else {
-            log.info("[CTK] No saved PIN, showing manual entry")
+            log.debug("[CTK] No saved PIN, showing manual entry")
             requestStatus = "Enter PIN"
             showPINEntry = true
         }
@@ -82,18 +82,13 @@ class TokenRequestHandler: NSObject, ObservableObject {
               let dataToSign = userInfo["data"] as? Data,
               let keyObjectID = userInfo["keyObjectID"] as? String else {
             requestError = "Invalid sign request"
-            log.info("[CTK] ERROR: missing fields in pendingUserInfo")
+            log.debug("[CTK] ERROR: missing fields in pendingUserInfo")
             return
         }
 
         showPINEntry = false
         let cardUUID = String(keyObjectID.dropLast(3))
         let registry = CardRegistry.shared
-
-        let algorithmRaw = userInfo["algorithm"] as? String ?? "unknown"
-        let keyTypeRaw = userInfo["keyType"] as? UInt8 ?? 0
-        log.info("[CTK] performSignRequest: op=\(operationType), data=\(dataToSign.count) bytes, objectID=\(keyObjectID), algorithm=\(algorithmRaw), keyType=\(keyTypeRaw)")
-        log.info("[CTK] dataToSign hex: \(dataToSign.prefix(32).map { String(format: "%02X", $0) }.joined()) ...")
 
         do {
             // Detect algorithm from registered certificate
@@ -103,16 +98,15 @@ class TokenRequestHandler: NSObject, ObservableObject {
                   let algorithm = ChallengeResponse.detectAlgorithm(certDER: certDER) else {
                 throw PIVError.badTLV("Cannot detect algorithm for card \(cardUUID)")
             }
-            log.info("[CTK] Detected algorithm: \(algorithm.label)")
+            log.debug("[CTK] Detected algorithm: \(algorithm.label)")
 
             // Determine signing scheme from the algorithm name passed by the extension
             let algorithmRaw = userInfo["algorithm"] as? String ?? ""
             let isPSS = algorithmRaw.contains("PSS")
             let isMessage = algorithmRaw.contains("Message") || algorithmRaw.contains("message") || dataToSign.count > 48
             let useSHA384 = algorithmRaw.contains("SHA384") || algorithmRaw.contains("384")
-            let useSHA256 = !useSHA384 // default to SHA-256
 
-            log.info("[CTK] algorithmRaw=\(algorithmRaw) isPSS=\(isPSS) isMessage=\(isMessage) useSHA384=\(useSHA384)")
+            log.debug("[CTK] algorithmRaw=\(algorithmRaw) isPSS=\(isPSS) isMessage=\(isMessage) useSHA384=\(useSHA384)")
 
             let payload: Data
             if algorithm.isRSA {
@@ -120,7 +114,7 @@ class TokenRequestHandler: NSObject, ObservableObject {
                 let digest: Data
                 if isMessage {
                     digest = useSHA384 ? PIVCrypto.sha384(dataToSign) : PIVCrypto.sha256(dataToSign)
-                    log.info("[CTK] RSA: hashed \(dataToSign.count)-byte message to \(digest.count)-byte digest")
+                    log.debug("[CTK] RSA: hashed \(dataToSign.count)-byte message to \(digest.count)-byte digest")
                 } else {
                     digest = dataToSign
                 }
@@ -128,7 +122,7 @@ class TokenRequestHandler: NSObject, ObservableObject {
                 if isPSS {
                     // RSA-PSS padding (RFC 8017 §9.1.1)
                     payload = rsaPSSPad(digest: digest, useSHA384: useSHA384, keySizeBytes: algorithm.keySizeBytes)
-                    log.info("[CTK] RSA-PSS padded: \(payload.count) bytes")
+                    log.debug("[CTK] RSA-PSS padded: \(payload.count) bytes")
                 } else {
                     // PKCS#1 v1.5 padding
                     payload = ChallengeResponse.pkcs1v15PadForSign(
@@ -136,16 +130,16 @@ class TokenRequestHandler: NSObject, ObservableObject {
                         useSHA384: useSHA384,
                         keySizeBytes: algorithm.keySizeBytes
                     )
-                    log.info("[CTK] RSA PKCS#1 v1.5 padded: \(payload.count) bytes")
+                    log.debug("[CTK] RSA PKCS#1 v1.5 padded: \(payload.count) bytes")
                 }
             } else {
                 // ECC: hash if message, otherwise pass digest directly
                 if isMessage {
                     payload = useSHA384 ? PIVCrypto.sha384(dataToSign) : PIVCrypto.sha256(dataToSign)
-                    log.info("[CTK] ECC: hashed to \(payload.count)-byte digest")
+                    log.debug("[CTK] ECC: hashed to \(payload.count)-byte digest")
                 } else {
                     payload = dataToSign
-                    log.info("[CTK] ECC raw digest: \(payload.count) bytes")
+                    log.debug("[CTK] ECC raw digest: \(payload.count) bytes")
                 }
             }
 
@@ -161,9 +155,9 @@ class TokenRequestHandler: NSObject, ObservableObject {
                 transport = usb
                 nfcTransport = nil
                 isUSB = true
-                log.info("[CTK] Using USB transport")
+                log.debug("[CTK] Using USB transport")
             } catch {
-                log.info("[CTK] USB not available (\(error)), falling back to NFC")
+                log.debug("[CTK] USB not available (\(error)), falling back to NFC")
                 let nfc = NFCTransport()
                 try await nfc.startSession(alertMessage: "Hold your PIV card near iPhone to sign")
                 transport = nfc
@@ -173,23 +167,23 @@ class TokenRequestHandler: NSObject, ObservableObject {
 
             let card = PIVCard(transport: transport)
             requestStatus = "Selecting PIV..."
-            log.info("[CTK] Sending SELECT")
+            log.debug("[CTK] Sending SELECT")
 
             let selectResp = try await card.select()
             guard selectResp.success else {
                 throw PIVError.commandFailed(sw: selectResp.sw, description: "SELECT failed")
             }
-            log.info("[CTK] SELECT OK")
+            log.debug("[CTK] SELECT OK")
 
             // If NFC, need SM + VCI for PIV Auth key access
             if !isUSB {
                 requestStatus = "Establishing Secure Messaging..."
-                log.info("[CTK] Establishing SM")
+                log.debug("[CTK] Establishing SM")
                 try await card.establishSM()
 
                 if let pairingCode = registered.pairingCode {
                     requestStatus = "Verifying pairing code..."
-                    log.info("[CTK] Verifying pairing code")
+                    log.debug("[CTK] Verifying pairing code")
                     let verifyResp = try await card.verifyPairingCode(pairingCode)
                     guard verifyResp.success else {
                         throw PIVError.commandFailed(sw: verifyResp.sw, description: "Pairing code failed")
@@ -199,7 +193,7 @@ class TokenRequestHandler: NSObject, ObservableObject {
 
             // VERIFY PIN
             requestStatus = "Verifying PIN..."
-            log.info("[CTK] Verifying PIN")
+            log.debug("[CTK] Verifying PIN")
             let pinResp = try await card.verify(pin: pin)
             guard pinResp.success else {
                 if pinResp.sw1 == 0x63 {
@@ -208,11 +202,11 @@ class TokenRequestHandler: NSObject, ObservableObject {
                 }
                 throw PIVError.commandFailed(sw: pinResp.sw, description: "PIN verification failed")
             }
-            log.info("[CTK] PIN OK")
+            log.debug("[CTK] PIN OK")
 
             // GENERAL AUTHENTICATE (sign with PIV Auth key, slot 9A)
             requestStatus = "Signing..."
-            log.info("[CTK] Sending GENERAL AUTHENTICATE")
+            log.debug("[CTK] Sending GENERAL AUTHENTICATE")
             let gaResp = try await card.generalAuthenticate(
                 mode: .internalAuthenticate,
                 slot: .authentication,
@@ -227,16 +221,16 @@ class TokenRequestHandler: NSObject, ObservableObject {
             guard let signature = extractGASignature(gaResp) else {
                 throw PIVError.badTLV("No signature in GA response")
             }
-            log.info("[CTK] Got signature: \(signature.count) bytes")
+            log.debug("[CTK] Got signature: \(signature.count) bytes")
 
             // Write result to shared UserDefaults for the extension to pick up
             let resultKey = operationType == "signData" ? "signedData" : "decryptedData"
             if let defaults = UserDefaults(suiteName: appGroupID) {
                 defaults.setValue(signature, forKey: resultKey)
                 defaults.synchronize()
-                log.info("[CTK] Wrote \(resultKey) to shared UserDefaults")
+                log.debug("[CTK] Wrote \(resultKey) to shared UserDefaults")
             } else {
-                log.info("[CTK] ERROR: Could not open shared UserDefaults!")
+                log.debug("[CTK] ERROR: Could not open shared UserDefaults!")
             }
 
             if let nfc = nfcTransport {
@@ -246,7 +240,7 @@ class TokenRequestHandler: NSObject, ObservableObject {
             }
 
             requestStatus = "Signed successfully"
-            log.info("[CTK] Sign flow complete")
+            log.debug("[CTK] Sign flow complete")
             hasPendingRequest = false
             pendingUserInfo = nil
 
@@ -255,7 +249,7 @@ class TokenRequestHandler: NSObject, ObservableObject {
             await UIApplication.shared.open(URL(string: "https://")!)
 
         } catch {
-            log.info("[CTK] ERROR: \(error)")
+            log.debug("[CTK] ERROR: \(error)")
             requestError = error.localizedDescription
             requestStatus = "Sign failed"
             cancelRequest()
@@ -329,7 +323,6 @@ private func rsaPSSPad(digest: Data, useSHA384: Bool, keySizeBytes: Int) -> Data
 
 /// MGF1 mask generation function (RFC 8017 §B.2.1)
 private func mgf1(seed: Data, length: Int, useSHA384: Bool) -> Data {
-    let hashLen = useSHA384 ? 48 : 32
     var output = Data()
     var counter: UInt32 = 0
 
@@ -356,7 +349,7 @@ extension TokenRequestHandler: UNUserNotificationCenterDelegate {
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
         let userInfo = response.notification.request.content.userInfo
-        log.info("[CTK] Notification tapped, forwarding to handler")
+        log.debug("[CTK] Notification tapped, forwarding to handler")
         Task { @MainActor in
             handleNotification(userInfo)
         }
